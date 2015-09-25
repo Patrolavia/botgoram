@@ -18,7 +18,7 @@ import (
 	"log"
 	"os"
 
-	"ronmi.tw/git/Patrolavia/botgoram/telegram"
+	"github.com/Patrolavia/botgoram/telegram"
 )
 
 var token string

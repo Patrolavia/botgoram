@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	"ronmi.tw/git/Patrolavia/botgoram/telegram"
+	"github.com/Patrolavia/botgoram/telegram"
 )
 
 // Bot is a bot fetching update throuth long polling method.
