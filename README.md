@@ -2,6 +2,8 @@
 
 Botgoram is state-based telegram bot framework written in go. It is built on top of a rewritten version of [tucnak/telebot](https://github.com/tucnak/telebot).
 
+Current it is still under development, not usable now.
+
 ### State based
 
 We think the work flow for bot is like a [Finite State Machine](https://en.wikipedia.org/wiki/Finite-state_machine): given current state, transit to next state acording to the input. We write code to choose right state, and migrate from one state to another.
