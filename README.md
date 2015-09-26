@@ -1,6 +1,6 @@
 # Botgoram - State-based telegram bot framework, in Go
 
-Botgoram is state-based telegram bot framework written in go. It is built on top of a rewritten version of [tucnak/telebot](https://github.com/tucnak/telebot).
+Botgoram is state-based telegram bot framework written in go. It is inspired by [tucnak/telebot](https://github.com/tucnak/telebot).
 
 Current it is still under development, not usable now.
 
@@ -13,21 +13,27 @@ The data stored in state will be serialized to JSON format for persistence.
 ## Synopsis
 
 ```go
+import (
+	"fmt"
+	"log"
+
+	"github.com/Patrolavia/botgoram/telegram"
+)
+
 // MyStateData defines what data to store in state.
 type MyStateData struct {
-	*telebot.User
 	Name string
 }
 
 func main() {
-	fsm, states := botgoram.New([]string{"/greet:ask name"}, new(MyStateData))
+	fsm := botgoram.New("my_telegram_token", new(MyStateData))
 
-    botgoram.InitialState.RegisterCommand("/greet", func(msg telebot.Message, cur botgoram.State) string {
+	fsm.InitialState.RegisterCommand("/greet", func(msg *telegram.Message, cur botgoram.State) string {
 		cur.Bot().SendMessage(msg.Sender, "Please input your name.", nil)
 		return "/greet:ask name"
 	})
 
-    states["/greet:ask name"].RegisterTextMessage(func(msg telebot.Message, cur botgoram.State) string {
+	fsm.NewState("/greet:ask name").RegisterTextMessage(func(msg *telegram.Message, cur botgoram.State) string {
 		if len(msg.Text) < 4 {
 			cur.Bot().SendMessage(msg.Sender, "Name too short, at least 4 characters.", nil)
 			return cur.Name()
@@ -37,14 +43,15 @@ func main() {
 		return "/greet:ask title"
 	})
 
-    fsm.NewState("/greet:ask title").RegisterTextMessage(func (msg telebot.Message, cur botgoram.State) string {
+	fsm.NewState("/greet:ask title").RegisterTextMessage(func(msg *telegram.Message, cur botgoram.State) string {
 		cur.Bot().SendMessage(msg.Sender, fmt.Sprintf("Hello. %s %s", msg.Text, cur.Data.Name), nil)
 		return "" // back to initial state
 	})
 
-    if err := fsm.Start(); err != nil {
-        log.Fatal("something goes wrong with your state map: %s", err)
-    }
+	if err := fsm.Start(); err != nil {
+		log.Fatal("something goes wrong with your state map: %s", err)
+	}
+}
 ```
 
 ## License
