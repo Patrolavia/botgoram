@@ -6,10 +6,13 @@ import (
 	"time"
 )
 
-// FakeAPI is mock object implements API interface and does exactly nothing.
-
+// FakeAPI implements API interface and does exactly nothing.
+// You can pass a channel to provide custom message data, which will be used in GetUpdates method.
+// Most identifiers are random-generated.
 type FakeAPI struct {
-	BotUser *User
+	BotUser     *User
+	MessagePipe chan *Message
+	id          int
 }
 
 func (f *FakeAPI) Me() (*User, error) {
@@ -135,8 +138,19 @@ func (f *FakeAPI) DownloadFile(file *File) (io.Reader, error) {
 	return file.GetReader()
 }
 
-func (f *FakeAPI) GetUpdates(offset, limit, timeout int) ([]Update, error) {
-	return []Update{}, nil
+// offset and limit is not used.
+func (f *FakeAPI) GetUpdates(offset, limit, timeout int) (u []Update, err error) {
+	select {
+	case msg := <-f.MessagePipe:
+		f.id++
+		u = []Update{Update{f.id, msg}}
+	default:
+		u = []Update{}
+		if timeout > 0 {
+			time.Sleep(time.Duration(timeout) * time.Second)
+		}
+	}
+	return
 }
 
 func (f *FakeAPI) SetWebhook(hook_url string, cert []byte) error {
