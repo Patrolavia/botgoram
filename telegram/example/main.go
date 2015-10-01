@@ -83,7 +83,7 @@ func reply(msg *telegram.Message, bot telegram.API) {
 	if msg.Chat.IsGroup() {
 		sender_type = "Chatroom"
 	}
-	msg_type := msg.Type() + " "
+	msg_type := msg.Type().String() + " "
 	if msg.ReplyTo != nil {
 		msg_type += "(reply)"
 	}

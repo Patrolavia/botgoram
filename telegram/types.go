@@ -1,6 +1,10 @@
 package telegram
 
-import "io"
+import (
+	"errors"
+	"io"
+	"os"
+)
 
 // User struct represents a Telegram user or chat group.
 type User struct {
@@ -8,7 +12,7 @@ type User struct {
 	FirstName string `json:"first_name,omitempty"` // User‘s or bot’s first name
 	LastName  string `json:"last_name,omitempty"`  // Optional. User‘s or bot’s last name
 	Username  string `json:"username,omitempty"`   // Optional. User‘s or bot’s username
-	Title string `json:"title,omitempty"` // Group name
+	Title     string `json:"title,omitempty"`      // Group name
 }
 
 // IsGroup returns true if this User object denotes a Telegram char group.
@@ -48,6 +52,17 @@ type File struct {
 	Stream   io.Reader // Optional.
 }
 
+// GetReader returns an io.Reader if it has information about local file.
+func (f *File) GetReader() (io.Reader, error) {
+	if f.Stream != nil {
+		return f.Stream, nil
+	}
+	if f.Filename == "" {
+		return nil, errors.New("telegram: No local file information in this File struct")
+	}
+	return os.Open(f.Filename)
+}
+
 // PhotoSize represents one size of a photo or a file / sticker thumbnail.
 type PhotoSize struct {
 	*File
@@ -64,9 +79,9 @@ type Document struct {
 // Audio represents an audio file to be treated as music by the Telegram clients.
 type Audio struct {
 	*File
-	Duration   int    `json:"duration"`            // Duration of the audio in seconds as defined by sender
-	Performaer string `json:"performer,omitempty"` // Optional. Performer of the audio as defined by sender or by audio tags
-	Title      string `json:"title,omitempty"`     // Optional. Title of the audio as defined by sender or by audio tags
+	Duration  int    `json:"duration"`            // Duration of the audio in seconds as defined by sender
+	Performer string `json:"performer,omitempty"` // Optional. Performer of the audio as defined by sender or by audio tags
+	Title     string `json:"title,omitempty"`     // Optional. Title of the audio as defined by sender or by audio tags
 }
 
 // Sticker represents a sticker.
@@ -115,8 +130,29 @@ type UserProfilePhotos struct {
 // Forward denotes a message is forwarded. It is a meta-type used only in Message type
 type Forward struct {
 	From      *User `json:"forward_from,omitempty"` // Optional. For forwarded messages, sender of the original message
-	Timestamp int64 `json:"forward_date,omitempty"`         // Optional. For forwarded messages, date the original message was sent in Unix time
+	Timestamp int64 `json:"forward_date,omitempty"` // Optional. For forwarded messages, date the original message was sent in Unix time
 }
+
+// MessageType represents type of message
+type MessageType string
+
+func (t MessageType) String() string {
+	return string(t)
+}
+
+// predefined message types
+const (
+	CONTACT  MessageType = "Contact"
+	LOCATION MessageType = "Location"
+	STICKER  MessageType = "Sticker"
+	PHOTO    MessageType = "Photo"
+	VIDEO    MessageType = "Video"
+	VOICE    MessageType = "Voice"
+	AUDIO    MessageType = "Audio"
+	DOCUMENT MessageType = "Document"
+	TEXT     MessageType = "Text"
+	STATUS   MessageType = "Status"
+)
 
 // Message represents a message.
 type Message struct {
@@ -145,27 +181,27 @@ type Message struct {
 }
 
 // Type returns message type.
-func (m Message) Type() (ret string) {
-	ret = "Status"
+func (m Message) Type() (ret MessageType) {
+	ret = STATUS
 	switch {
 	case m.Contact != nil:
-		ret = "Contact"
+		ret = CONTACT
 	case m.Location != nil:
-		ret = "Location"
+		ret = LOCATION
 	case m.Sticker != nil:
-		ret = "Sticker"
-	case m.Voice != nil:
-		ret = "Voice"
-	case m.Audio != nil:
-		ret = "Audio"
-	case m.Video != nil:
-		ret = "Video"
+		ret = STICKER
 	case m.Photo != nil:
-		ret = "Photo"
+		ret = PHOTO
+	case m.Video != nil:
+		ret = VIDEO
+	case m.Voice != nil:
+		ret = VOICE
+	case m.Audio != nil:
+		ret = AUDIO
 	case m.Document != nil:
-		ret = "Document"
+		ret = DOCUMENT
 	case m.Text != "":
-		ret = "Text"
+		ret = TEXT
 	}
 	return
 }
@@ -177,6 +213,6 @@ type Update struct {
 }
 
 type updates struct {
-	Success bool `json:"ok"`
-	Result []Update `json:"result"`
+	Success bool     `json:"ok"`
+	Result  []Update `json:"result"`
 }

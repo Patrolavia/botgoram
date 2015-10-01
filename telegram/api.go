@@ -2,14 +2,12 @@ package telegram
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 	"strings"
 )
@@ -75,14 +73,9 @@ func (a api) sendFile(method, name string, file *File, params url.Values) (ret [
 		params.Set(name, file.Id)
 		return a.sendCommand(method, params)
 	}
-	s := file.Stream
-	if s == nil {
-		if file.Filename == "" {
-			return ret, errors.New("No local file information in File struct!")
-		}
-		if s, err = os.Open(file.Filename); err != nil {
-			return
-		}
+	s, err := file.GetReader()
+	if err != nil {
+		return
 	}
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)

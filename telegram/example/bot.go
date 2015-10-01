@@ -51,7 +51,7 @@ func (b *bot) Run(channel chan *telegram.Message, timeout int) error {
 
 func (b *bot) Err() (err error) {
 	err = b.err
-	if b.err != nil {
+	if err != nil {
 		b.Lock()
 		b.err = nil
 		b.Unlock()
