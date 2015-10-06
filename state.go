@@ -45,7 +45,7 @@ const InitialState string = "" // predefined state id for initial state
 // Sometimes you need to register more than one transitor to a type. For example,
 // an image bot might want to transit to different state according to image file
 // format. The order we run transitor is just the order you register it.
-type Transitor func(msg *telegram.Message, data interface{}, user *telegram.User, sid string) (next string, err error)
+type Transitor func(msg *telegram.Message, state State) (next string, err error)
 
 // State describes how you can act with FSM and state data.
 type State interface {
@@ -75,7 +75,7 @@ type transitors []Transitor
 func (ts transitors) test(msg *telegram.Message, cur State) (next string, err error) {
 	err = ErrNoMatch
 	for _, t := range ts {
-		if next, err = t(msg, cur.Data(), cur.User(), cur.Id()); err == nil {
+		if next, err = t(msg, cur); err == nil {
 			return
 		}
 	}
@@ -167,10 +167,11 @@ func (s *state) test(msg *telegram.Message) (next string, err error) {
 		if len(matches) != 3 {
 			return
 		}
-		if _, ok := s.command[matches[1]]; !ok {
+		cmd , ok := s.command[matches[1]]
+		if !ok {
 			return
 		}
-		return do_test(s.command[matches[1]])
+		return do_test(cmd)
 	}
 
 	// process forwarded message and replied message

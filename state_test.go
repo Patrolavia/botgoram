@@ -15,7 +15,7 @@ func TestTypeTransitors(t *testing.T) {
 		}
 	}
 	factory := func(result string) Transitor {
-		f := func(msg *telegram.Message, data interface{}, user *telegram.User, sid string) (next string, err error) {
+		f := func(msg *telegram.Message, state State) (next string, err error) {
 			return string(result), nil
 		}
 		return f
