@@ -14,7 +14,7 @@ Package botgoram is a state-based Telegram bot framework.
 			"error",
 			func(msg *telegram.Message, current botgoram.State, api telegram.API) error { // enter
 				api.SendMessage(current.User(), `/start - start using greeting bot.`, nil)
-				current.Transit(botgoram.StateId(""))
+				current.Transit(botgoram.InitialState)
 				return nil
 			},
 			nil,
@@ -75,14 +75,14 @@ Package botgoram is a state-based Telegram bot framework.
 		}
 
 		// register our command at initial state
-		st, ok := fsm.State(botgoram.StateId(""))
+		st, ok := fsm.State(botgoram.InitialState)
 		if !ok {
 			log.Fatal("Cannot get initial state")
 		}
 		st.RegisterCommand(
 			"/start",
-			func(msg *telegram.Message, data interface{}, user *telegram.User, sid botgoram.StateId) (next botgoram.StateId, err error) {
-				return botgoram.StateId("ask name"), nil
+			func(msg *telegram.Message, data interface{}, user *telegram.User, sid string) (next string, err error) {
+				return "ask name", nil
 			},
 		)
 		// error handling, any error will go to error state
@@ -90,9 +90,9 @@ Package botgoram is a state-based Telegram bot framework.
 			msg *telegram.Message,
 			data interface{},
 			user *telegram.User,
-			sid botgoram.StateId,
-		) (next botgoram.StateId, err error) {
-			return botgoram.StateId("error"), err
+			sid string,
+		) (next string, err error) {
+			return "error", err
 		}
 		st.RegisterFallback(err_handler)
 
@@ -102,10 +102,10 @@ Package botgoram is a state-based Telegram bot framework.
 		// the state asking user name
 		askName(fsm).Register(
 			telegram.TEXT,
-			func(msg *telegram.Message, data interface{}, user *telegram.User, sid botgoram.StateId) (next botgoram.StateId, err error) {
+			func(msg *telegram.Message, data interface{}, user *telegram.User, sid string) (next string, err error) {
 				next = sid
 				if msg.Text != "" {
-					next = botgoram.StateId("ask title")
+					next = "ask title"
 				}
 				return
 			},
@@ -113,10 +113,10 @@ Package botgoram is a state-based Telegram bot framework.
 
 		askTitle(fsm).Register(
 			telegram.TEXT,
-			func(msg *telegram.Message, data interface{}, user *telegram.User, sid botgoram.StateId) (next botgoram.StateId, err error) {
+			func(msg *telegram.Message, data interface{}, user *telegram.User, sid string) (next string, err error) {
 				next = sid
 				if msg.Text != "" {
-					next = botgoram.StateId("")
+					next = botgoram.InitialState
 				}
 				return
 			},

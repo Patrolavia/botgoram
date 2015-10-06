@@ -17,8 +17,8 @@ type FSM interface {
 	Start(timeout int) error
 	// Resume the stopped worker. Calling Resume will block until any worker goes wrong.
 	Resume() error
-	AddState(id StateId, enter, leave Action) (State, error)
-	State(id StateId) (State, bool)
+	AddState(id string, enter, leave Action) (State, error)
+	State(id string) (State, bool)
 }
 
 func bySender(msg *telegram.Message) *telegram.User {
@@ -38,7 +38,7 @@ type internalStateData struct {
 type fsm struct {
 	api           telegram.API
 	userExtractor func(*telegram.Message) *telegram.User
-	states        map[StateId]internalStateData
+	states        map[string]internalStateData
 	storage       SaveLoader
 	manager       *manager
 	error_chan    chan error
@@ -53,7 +53,7 @@ func newFSM(token string, ue func(*telegram.Message) *telegram.User, sl SaveLoad
 	}
 
 	tmp := &fsm{
-		api, ue, map[StateId]internalStateData{
+		api, ue, map[string]internalStateData{
 			"": internalStateData{state: newState("")},
 		}, sl, newManager(ue, size),
 		make(chan error, size),
@@ -75,7 +75,7 @@ func NewByChat(token string, sl SaveLoader, size int) (FSM, error) {
 	return newFSM(token, byChat, sl, size)
 }
 
-func (f *fsm) AddState(id StateId, enter, leave Action) (ret State, err error) {
+func (f *fsm) AddState(id string, enter, leave Action) (ret State, err error) {
 	if _, ok := f.states[id]; ok {
 		return ret, fmt.Errorf("State id %s is in use.", id)
 	}
@@ -85,7 +85,7 @@ func (f *fsm) AddState(id StateId, enter, leave Action) (ret State, err error) {
 	return
 }
 
-func (f *fsm) State(id StateId) (ret State, ok bool) {
+func (f *fsm) State(id string) (ret State, ok bool) {
 	res, ok := f.states[id]
 	if ok {
 		ret = res.state
@@ -152,7 +152,7 @@ func (f *fsm) work(id int) (err error) {
 	return
 }
 
-func (f *fsm) transit(msg *telegram.Message, current State, id StateId) (err error) {
+func (f *fsm) transit(msg *telegram.Message, current State, id string) (err error) {
 	user := current.User()
 	cur_node, ok := f.states[current.Id()]
 	if !ok {

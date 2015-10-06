@@ -21,9 +21,7 @@ func init() {
 // ErrNoMatching denotes the message does not match the transitor
 var ErrNoMatch error = errors.New("No matching transitor!")
 
-// StateId is unique state identifier
-type StateId string
-
+const InitialState string = "" // predefined state id for initial state
 // Transitor transits to next state according to message
 //
 // Which transitor to call
@@ -47,15 +45,15 @@ type StateId string
 // Sometimes you need to register more than one transitor to a type. For example,
 // an image bot might want to transit to different state according to image file
 // format. The order we run transitor is just the order you register it.
-type Transitor func(msg *telegram.Message, data interface{}, user *telegram.User, sid StateId) (next StateId, err error)
+type Transitor func(msg *telegram.Message, data interface{}, user *telegram.User, sid string) (next string, err error)
 
 // State describes how you can act with FSM and state data.
 type State interface {
 	Data() interface{}
 	SetData(interface{})
 	User() *telegram.User // who this state associate with
-	Id() StateId          // retrive current state id
-	Transit(id StateId)   // directly transit to another state
+	Id() string          // retrive current state id
+	Transit(id string)   // directly transit to another state
 
 	// register transitors by message types
 	Register(mt telegram.MessageType, t Transitor)
@@ -67,14 +65,14 @@ type State interface {
 	RegisterCommand(cmd string, t Transitor)
 
 	RegisterFallback(Transitor)
-	test(msg *telegram.Message) (next StateId, err error)
+	test(msg *telegram.Message) (next string, err error)
 	clone(user *telegram.User) State
-	next() *StateId
+	next() *string
 }
 
 type transitors []Transitor
 
-func (ts transitors) test(msg *telegram.Message, cur State) (next StateId, err error) {
+func (ts transitors) test(msg *telegram.Message, cur State) (next string, err error) {
 	err = ErrNoMatch
 	for _, t := range ts {
 		if next, err = t(msg, cur.Data(), cur.User(), cur.Id()); err == nil {
@@ -87,17 +85,17 @@ func (ts transitors) test(msg *telegram.Message, cur State) (next StateId, err e
 type state struct {
 	data     interface{}
 	user     *telegram.User
-	id       StateId
+	id       string
 	forward  transitors
 	reply    transitors
 	types    map[telegram.MessageType]transitors
 	command  map[string]transitors
 	text     transitors
 	fallback transitors
-	chain    *StateId
+	chain    *string
 }
 
-func newState(id StateId) State {
+func newState(id string) State {
 	return &state{
 		id:      id,
 		types:   make(map[telegram.MessageType]transitors),
@@ -111,11 +109,11 @@ func (s *state) clone(user *telegram.User) State {
 	return &c
 }
 
-func (s *state) Transit(id StateId) {
+func (s *state) Transit(id string) {
 	s.chain = &id
 }
 
-func (s *state) next() *StateId {
+func (s *state) next() *string {
 	return s.chain
 }
 
@@ -131,7 +129,7 @@ func (s *state) User() *telegram.User {
 	return s.user
 }
 
-func (s *state) Id() StateId {
+func (s *state) Id() string {
 	return s.id
 }
 
@@ -155,15 +153,15 @@ func (s *state) RegisterFallback(t Transitor) {
 	s.fallback = append(s.fallback, t)
 }
 
-func (s *state) test(msg *telegram.Message) (next StateId, err error) {
-	do_test := func(ts transitors) (next StateId, err error) {
+func (s *state) test(msg *telegram.Message) (next string, err error) {
+	do_test := func(ts transitors) (next string, err error) {
 		if len(ts) == 0 {
 			return next, ErrNoMatch
 		}
 		return ts.test(msg, s)
 	}
 	// TODO: find better way to test commands.
-	test_cmd := func() (next StateId, err error) {
+	test_cmd := func() (next string, err error) {
 		err = ErrNoMatch
 		matches := command_spliter.FindStringSubmatch(msg.Text)
 		if len(matches) != 3 {

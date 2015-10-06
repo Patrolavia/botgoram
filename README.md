@@ -27,20 +27,20 @@ fsm.AddState(
 	"hello world",
 	func(msg *telegram.Message, current botgoram.State, api telegram.API) error {
 		api.SendMessage(current.User(), "Hello, you're entring world state", nil)
-		current.Transit(botgoram.StateId("")) // go back to initial state
+		current.Transit(botgoram.InitialState) // go back to initial state
 	},
 	func(msg *telegram.Message, current botgoram.State, api telegram.API) error {
 		api.SendMessage(current.User(), "Hello, you're leaving world state", nil)
 	})
 
-init_state, ok := fsm.State(botgoram.StateId(""))
+init_state, ok := fsm.State(botgoram.InitialState)
 if !ok {
     panic("Cannot get initial state.")
 }
 
 init_state.RegisterFallback(
-	func(m *telegram.Message, d interface{}, u *telegram.User, c botgoram.StateId) (botgoram.StateId, error) {
-		return botgoram.StateId("hello world") nil
+	func(m *telegram.Message, d interface{}, u *telegram.User, c string) (string, error) {
+		return "hello world", nil
 })
 
 log.Fatal(fsm.Start(30))
