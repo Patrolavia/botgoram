@@ -1,10 +1,13 @@
 package botgoram
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Patrolavia/botgoram/telegram"
 )
+
+var ErrStateNotFound error = errors.New("State not found.")
 
 // Action describes what to do when enter/leaving a state.
 type Action func(msg *telegram.Message, current State, api telegram.API) error
@@ -19,6 +22,9 @@ type FSM interface {
 	Resume() error
 	AddState(id string, enter, leave Action) (State, error)
 	State(id string) (State, bool)
+	// MakeState will register a new state.
+	// Transitors will be registered when first call to FSM.Start()
+	MakeState(StateMaker) (State, error)
 }
 
 func bySender(msg *telegram.Message) *telegram.User {
@@ -42,6 +48,7 @@ type fsm struct {
 	storage       SaveLoader
 	manager       *manager
 	error_chan    chan error
+	sm            []StateMaker
 }
 
 func newFSM(token string, ue func(*telegram.Message) *telegram.User, sl SaveLoader, size int) (ret FSM, err error) {
@@ -57,6 +64,7 @@ func newFSM(token string, ue func(*telegram.Message) *telegram.User, sl SaveLoad
 			"": internalStateData{state: newState("")},
 		}, sl, newManager(ue, size),
 		make(chan error, size),
+		make([]StateMaker, 0),
 	}
 	for i := 0; i < size; i++ {
 		tmp.error_chan <- nil
@@ -73,6 +81,15 @@ func NewBySender(token string, sl SaveLoader, size int) (FSM, error) {
 // NewByChat creates a FSM associates with chatroom, and test if token is valid.
 func NewByChat(token string, sl SaveLoader, size int) (FSM, error) {
 	return newFSM(token, byChat, sl, size)
+}
+
+func (f *fsm) MakeState(sm StateMaker) (ret State, err error) {
+	if ret, err = f.AddState(sm.Name(), sm.Enter, sm.Leave); err != nil {
+		return
+	}
+
+	f.sm = append(f.sm, sm)
+	return
 }
 
 func (f *fsm) AddState(id string, enter, leave Action) (ret State, err error) {
@@ -94,6 +111,23 @@ func (f *fsm) State(id string) (ret State, ok bool) {
 }
 
 func (f *fsm) Start(timeout int) error {
+	// register statemaker's transitors
+	for _, s := range f.sm {
+		for _, t := range s.Transitors() {
+			st, ok := f.State(t.State)
+			if !ok {
+				return ErrStateNotFound
+			}
+			switch {
+			case t.IsFallback:
+				st.RegisterFallback(t.Transitor)
+			case t.Command != "" && t.Type == telegram.TEXT:
+				st.RegisterCommand(t.Command, t.Transitor)
+			default:
+				st.Register(t.Type, t.Transitor)
+			}
+		}
+	}
 	go func() {
 		offset := 0
 		for {
