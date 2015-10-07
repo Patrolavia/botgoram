@@ -15,7 +15,6 @@ type TransitorMap struct {
 // just implement this and call FSM.MakeState() method.
 type StateMaker interface {
 	Name() string // state id you want to register
-	Enter(msg *telegram.Message, current State, api telegram.API) error
-	Leave(msg *telegram.Message, current State, api telegram.API) error
+	Actions() (enter Action, leave Action)
 	Transitors() []TransitorMap
 }

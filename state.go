@@ -52,8 +52,13 @@ type State interface {
 	Data() interface{}
 	SetData(interface{})
 	User() *telegram.User // who this state associate with
-	Id() string          // retrive current state id
-	Transit(id string)   // directly transit to another state
+	Id() string           // retrive current state id
+	Transit(id string)    // directly transit to another state without transitor
+	// Transit again base on this state.
+	// Retransit() have lower priority than Transit(id), if you call
+	// Transit(id) anywhere before or after Retransit(), the state will
+	// transit to id, without testing any transitor.
+	Retransit()
 
 	// register transitors by message types
 	Register(mt telegram.MessageType, t Transitor)
@@ -68,6 +73,7 @@ type State interface {
 	test(msg *telegram.Message) (next string, err error)
 	clone(user *telegram.User) State
 	next() *string
+	re() bool
 }
 
 type transitors []Transitor
@@ -83,16 +89,17 @@ func (ts transitors) test(msg *telegram.Message, cur State) (next string, err er
 }
 
 type state struct {
-	data     interface{}
-	user     *telegram.User
-	id       string
-	forward  transitors
-	reply    transitors
-	types    map[telegram.MessageType]transitors
-	command  map[string]transitors
-	text     transitors
-	fallback transitors
-	chain    *string
+	data      interface{}
+	user      *telegram.User
+	id        string
+	forward   transitors
+	reply     transitors
+	types     map[telegram.MessageType]transitors
+	command   map[string]transitors
+	text      transitors
+	fallback  transitors
+	chain     *string
+	retransit bool
 }
 
 func newState(id string) State {
@@ -107,6 +114,14 @@ func (s *state) clone(user *telegram.User) State {
 	c := *s
 	c.user = user
 	return &c
+}
+
+func (s *state) Retransit() {
+	s.retransit = true
+}
+
+func (s *state) re() bool {
+	return s.retransit
 }
 
 func (s *state) Transit(id string) {
@@ -167,7 +182,7 @@ func (s *state) test(msg *telegram.Message) (next string, err error) {
 		if len(matches) != 3 {
 			return
 		}
-		cmd , ok := s.command[matches[1]]
+		cmd, ok := s.command[matches[1]]
 		if !ok {
 			return
 		}

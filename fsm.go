@@ -84,7 +84,8 @@ func NewByChat(token string, sl SaveLoader, size int) (FSM, error) {
 }
 
 func (f *fsm) MakeState(sm StateMaker) (ret State, err error) {
-	if ret, err = f.AddState(sm.Name(), sm.Enter, sm.Leave); err != nil {
+	enter, leave := sm.Actions()
+	if ret, err = f.AddState(sm.Name(), enter, leave); err != nil {
 		return
 	}
 
@@ -175,29 +176,43 @@ func (f *fsm) work(id int) (err error) {
 	}
 	cur := cur_node.state.clone(user)
 	cur.SetData(data)
-	next_sid, err := cur.test(msg)
+
+	do_next := func(cur State, msg *telegram.Message) (next State, err error) {
+		next_sid, err := cur.test(msg)
+		if err != nil {
+			return
+		}
+
+		return f.transit(msg, cur, next_sid)
+	}
+
+	next, err := do_next(cur, msg)
 	if err != nil {
 		return
 	}
 
-	if err = f.transit(msg, cur, next_sid); err == nil {
-		f.manager.Commit(msg)
+	for ;next.re(); {
+		if next, err = do_next(next, msg); err != nil {
+			return
+		}
 	}
+
+	f.manager.Commit(msg)
 	return
 }
 
-func (f *fsm) transit(msg *telegram.Message, current State, id string) (err error) {
+func (f *fsm) transit(msg *telegram.Message, current State, id string) (next State, err error) {
 	user := current.User()
 	cur_node, ok := f.states[current.Id()]
 	if !ok {
-		return fmt.Errorf("Cannot load state[%s] of user#%d", current.Id(), user.Id)
+		return next, fmt.Errorf("Cannot load state[%s] of user#%d", current.Id(), user.Id)
 	}
 
 	next_node, ok := f.states[id]
 	if !ok {
-		return fmt.Errorf("Cannot load next state[%s] of user#%d", id, user.Id)
+		return next, fmt.Errorf("Cannot load next state[%s] of user#%d", id, user.Id)
 	}
-	next := next_node.state.clone(user)
+	next = next_node.state.clone(user)
 
 	if cur_node.leave != nil {
 		if err = cur_node.leave(msg, current, f.api); err != nil {
@@ -215,7 +230,11 @@ func (f *fsm) transit(msg *telegram.Message, current State, id string) (err erro
 
 	err = f.storage.Save(user.Id, next.Id(), next.Data())
 	if next.next() != nil {
-		err = f.transit(msg, next, *next.next())
+		next, err = f.transit(msg, next, *next.next())
+	}
+
+	if next.re() {
+
 	}
 
 	return
