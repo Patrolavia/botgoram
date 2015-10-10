@@ -5,10 +5,14 @@ import "github.com/Patrolavia/botgoram/telegram"
 // TransitorMap maps a transitor to parent state.
 type TransitorMap struct {
 	Transitor Transitor
-	State string // state id of parent state
-	IsFallback bool // if this is a fallback transitor. matched fist.
-	Type telegram.MessageType
-	Command string // ignored if it is empty string or Type is not TEXT.
+	State     string // state id of parent state
+	// matched first. A hidden transitor is only for generating state map.
+	// It denotes a call to Transit(id).
+	IsHidden   bool
+	IsFallback bool // if this is a fallback transitor. matched second.
+	Type       telegram.MessageType
+	Command    string // ignored if it is empty string or Type is not TEXT.
+	Desc       string // only for state map generating.
 }
 
 // StateMaker helps you design you own state map by

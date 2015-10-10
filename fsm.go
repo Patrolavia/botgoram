@@ -15,16 +15,18 @@ type Action func(msg *telegram.Message, current State, api telegram.API) error
 // FSM is a finite state machine.
 type FSM interface {
 	// Start will "power on" the FSM.
-	// It will block until any worker goes wrong, stop the worker and returns the error.
+	// It will block until any worker goes wrong, stop that worker and return the error.
 	// At the mean time, other worker will stay working.
 	Start(timeout int) error
 	// Resume the stopped worker. Calling Resume will block until any worker goes wrong.
 	Resume() error
 	AddState(id string, enter, leave Action) (State, error)
 	State(id string) (State, bool)
-	// MakeState will register a new state.
+	// MakeState will register a new state with StateMaker.
 	// Transitors will be registered when first call to FSM.Start()
 	MakeState(StateMaker) (State, error)
+	// StateMap generate graphviz diagram from registered StateMaker
+	StateMap(name string) (dot string)
 }
 
 func bySender(msg *telegram.Message) *telegram.User {
@@ -111,10 +113,13 @@ func (f *fsm) State(id string) (ret State, ok bool) {
 	return
 }
 
-func (f *fsm) Start(timeout int) error {
-	// register statemaker's transitors
+// register statemaker's transitors
+func (f *fsm) registerStateMapTransitors() error {
 	for _, s := range f.sm {
 		for _, t := range s.Transitors() {
+			if t.IsHidden {
+				continue
+			}
 			st, ok := f.State(t.State)
 			if !ok {
 				return ErrStateNotFound
@@ -128,6 +133,14 @@ func (f *fsm) Start(timeout int) error {
 				st.Register(t.Type, t.Transitor)
 			}
 		}
+	}
+	f.sm = []StateMaker{}
+	return nil
+}
+
+func (f *fsm) Start(timeout int) error {
+	if err := f.registerStateMapTransitors(); err != nil {
+		return err
 	}
 	go func() {
 		offset := 0
