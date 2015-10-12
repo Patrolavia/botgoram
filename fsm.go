@@ -53,14 +53,7 @@ type fsm struct {
 	sm            []StateMaker
 }
 
-func newFSM(token string, ue func(*telegram.Message) *telegram.User, sl SaveLoader, size int) (ret FSM, err error) {
-	api := telegram.New(token)
-
-	// validate token
-	if _, err = api.Me(); err != nil {
-		return
-	}
-
+func newFSM(api telegram.API, ue func(*telegram.Message) *telegram.User, sl SaveLoader, size int) (ret FSM) {
 	tmp := &fsm{
 		api, ue, map[string]internalStateData{
 			"": internalStateData{state: newState("")},
@@ -72,17 +65,17 @@ func newFSM(token string, ue func(*telegram.Message) *telegram.User, sl SaveLoad
 		tmp.error_chan <- nil
 	}
 
-	return tmp, err
+	return tmp
 }
 
-// NewBySender creates a FSM associates with message sender, and test if token is valid.
-func NewBySender(token string, sl SaveLoader, size int) (FSM, error) {
-	return newFSM(token, bySender, sl, size)
+// NewBySender creates a FSM associates with message sender.
+func NewBySender(api telegram.API, sl SaveLoader, size int) FSM {
+	return newFSM(api, bySender, sl, size)
 }
 
-// NewByChat creates a FSM associates with chatroom, and test if token is valid.
-func NewByChat(token string, sl SaveLoader, size int) (FSM, error) {
-	return newFSM(token, byChat, sl, size)
+// NewByChat creates a FSM associates with chatroom.
+func NewByChat(api telegram.API, sl SaveLoader, size int) FSM {
+	return newFSM(api, byChat, sl, size)
 }
 
 func (f *fsm) MakeState(sm StateMaker) (ret State, err error) {
