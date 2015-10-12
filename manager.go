@@ -8,11 +8,11 @@ import (
 
 type manager struct {
 	size          int
-	running_users map[int]bool
+	runningUsers map[int]bool
 	msgQ          []*telegram.Message
 	lock          sync.Locker
 	cond          *sync.Cond
-	getUid        func(*telegram.Message) *telegram.User
+	getUID        func(*telegram.Message) *telegram.User
 }
 
 func newManager(f func(*telegram.Message) *telegram.User, size int) *manager {
@@ -27,16 +27,16 @@ func newManager(f func(*telegram.Message) *telegram.User, size int) *manager {
 	}
 }
 
-func (m *manager) GetUid(msg *telegram.Message) *telegram.User {
-	return m.getUid(msg)
+func (m *manager) GetUID(msg *telegram.Message) *telegram.User {
+	return m.getUID(msg)
 }
 
 func (m *manager) Commit(msg *telegram.Message) {
 	m.lock.Lock()
-	delete(m.running_users, m.getUid(msg).Id)
+	delete(m.runningUsers, m.getUID(msg).ID)
 	// delete msg from Q
 	for k, mm := range m.msgQ {
-		if mm.Id == msg.Id {
+		if mm.ID == msg.ID {
 			tmp := m.msgQ[0:k]
 			if k < len(m.msgQ)-1 {
 				tmp = append(tmp, m.msgQ[k+1:]...)
@@ -49,19 +49,19 @@ func (m *manager) Commit(msg *telegram.Message) {
 }
 
 func (m *manager) Rollback(msg *telegram.Message) {
-	if ok := m.running_users[m.getUid(msg).Id]; !ok {
+	if ok := m.runningUsers[m.getUID(msg).ID]; !ok {
 		return
 	}
 	m.lock.Lock()
-	delete(m.running_users, m.getUid(msg).Id)
+	delete(m.runningUsers, m.getUID(msg).ID)
 	m.lock.Unlock()
 	m.cond.Signal()
 }
 
 func (m *manager) getFirstNew() (ret *telegram.Message) {
 	for _, msg := range m.msgQ {
-		if !m.running_users[m.getUid(msg).Id] {
-			m.running_users[m.getUid(msg).Id] = true
+		if !m.runningUsers[m.getUID(msg).ID] {
+			m.runningUsers[m.getUID(msg).ID] = true
 			return msg
 		}
 	}
@@ -95,8 +95,8 @@ func (m *manager) Run(api telegram.API, timeout int) {
 		msgs := make([]*telegram.Message, len(updates))
 		for k, v := range updates {
 			msgs[k] = v.Message
-			if offset <= v.Id {
-				offset = v.Id + 1
+			if offset <= v.ID {
+				offset = v.ID + 1
 			}
 		}
 		m.feed(msgs)
@@ -111,7 +111,7 @@ func (m *manager) feed(msgs []*telegram.Message) {
 
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	for len(m.msgQ) > 0 || len(m.running_users) >= m.size {
+	for len(m.msgQ) > 0 || len(m.runningUsers) >= m.size {
 		m.cond.Wait()
 	}
 }

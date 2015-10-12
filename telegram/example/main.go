@@ -31,7 +31,7 @@ func init() {
 }
 
 func main() {
-	bot := NewBot(token)
+	bot := newBot(token)
 	ch := make(chan *telegram.Message)
 	if err := bot.Run(ch, 30); err != nil {
 		log.Fatalf("Error running bot: %s", err)
@@ -71,7 +71,7 @@ or you can send message to me, I will reply it with some debug message.`, nil)
 		case "/loc":
 			bot.SendLocation(msg.Chat, &telegram.Location{24.1501297, 120.6863541}, nil)
 		case "/forward":
-			bot.ForwardMessage(msg.Chat, msg.Chat, msg.Id)
+			bot.ForwardMessage(msg.Chat, msg.Chat, msg.ID)
 		default:
 			reply(msg, bot)
 		}
@@ -79,21 +79,21 @@ or you can send message to me, I will reply it with some debug message.`, nil)
 }
 
 func reply(msg *telegram.Message, bot telegram.API) {
-	sender_type := "User"
+	senderType := "User"
 	if msg.Chat.IsGroup() {
-		sender_type = "Chatroom"
+		senderType = "Chatroom"
 	}
-	msg_type := msg.Type().String() + " "
+	msgType := msg.Type().String() + " "
 	if msg.ReplyTo != nil {
-		msg_type += "(reply)"
+		msgType += "(reply)"
 	}
 	if msg.Forward != nil {
-		msg_type += "(forward from " + msg.Forward.From.Name() + ")"
+		msgType += "(forward from " + msg.Forward.From.Name() + ")"
 	}
-	sender_name := msg.Sender.Name()
-	opt := &telegram.Options{ReplyTo: msg.Id}
+	senderName := msg.Sender.Name()
+	opt := &telegram.Options{ReplyTo: msg.ID}
 	bot.SendMessage(msg.Chat, fmt.Sprintf(`Chatroom title or user name: %s
 Send from: %s
 Sender: %s
-Message type: %s`, msg.Chat.Name(), sender_type, sender_name, msg_type), opt)
+Message type: %s`, msg.Chat.Name(), senderType, senderName, msgType), opt)
 }

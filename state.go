@@ -8,20 +8,22 @@ import (
 	"github.com/Patrolavia/botgoram/telegram"
 )
 
-var command_spliter *regexp.Regexp
+var commandSpliter *regexp.Regexp
 
 func init() {
 	cs, err := regexp.Compile(`^(\S+)(\s*.*)?$`)
 	if err != nil {
 		log.Fatalf("Cannot compile regular expression for spliting command, contact botgoram developer!")
 	}
-	command_spliter = cs
+	commandSpliter = cs
 }
 
 // ErrNoMatching denotes the message does not match the transitor
-var ErrNoMatch error = errors.New("No matching transitor!")
+var ErrNoMatch = errors.New("No matching transitor!")
 
-const InitialState string = "" // predefined state id for initial state
+// InitialState is predefined state id for initial state
+const InitialState = ""
+
 // Transitor transits to next state according to message
 //
 // Which transitor to call
@@ -52,7 +54,7 @@ type State interface {
 	Data() interface{}
 	SetData(interface{})
 	User() *telegram.User // who this state associate with
-	Id() string           // retrive current state id
+	ID() string           // retrive current state id
 	Transit(id string)    // directly transit to another state without transitor
 	// Transit again base on this state.
 	// Retransit() have lower priority than Transit(id), if you call
@@ -144,7 +146,7 @@ func (s *state) User() *telegram.User {
 	return s.user
 }
 
-func (s *state) Id() string {
+func (s *state) ID() string {
 	return s.id
 }
 
@@ -169,16 +171,16 @@ func (s *state) RegisterFallback(t Transitor) {
 }
 
 func (s *state) test(msg *telegram.Message) (next string, err error) {
-	do_test := func(ts transitors) (next string, err error) {
+	doTest := func(ts transitors) (next string, err error) {
 		if len(ts) == 0 {
 			return next, ErrNoMatch
 		}
 		return ts.test(msg, s)
 	}
 	// TODO: find better way to test commands.
-	test_cmd := func() (next string, err error) {
+	testCmd := func() (next string, err error) {
 		err = ErrNoMatch
-		matches := command_spliter.FindStringSubmatch(msg.Text)
+		matches := commandSpliter.FindStringSubmatch(msg.Text)
 		if len(matches) != 3 {
 			return
 		}
@@ -186,33 +188,33 @@ func (s *state) test(msg *telegram.Message) (next string, err error) {
 		if !ok {
 			return
 		}
-		return do_test(cmd)
+		return doTest(cmd)
 	}
 
 	// process forwarded message and replied message
 	if msg.Forward != nil {
-		if next, err = do_test(s.forward); err == nil {
+		if next, err = doTest(s.forward); err == nil {
 			return
 		}
 	}
 	if msg.ReplyTo != nil {
-		if next, err = do_test(s.reply); err == nil {
+		if next, err = doTest(s.reply); err == nil {
 			return
 		}
 	}
 
-	msg_type := msg.Type()
+	msgType := msg.Type()
 	// process command message
-	if msg_type == telegram.TEXT {
-		if next, err = test_cmd(); err == nil {
+	if msgType == telegram.TEXT {
+		if next, err = testCmd(); err == nil {
 			return
 		}
 	}
-	if _, ok := s.types[msg_type]; ok {
-		if next, err = do_test(s.types[msg_type]); err == nil {
+	if _, ok := s.types[msgType]; ok {
+		if next, err = doTest(s.types[msgType]); err == nil {
 			return
 		}
 	}
-	next, err = do_test(s.fallback)
+	next, err = doTest(s.fallback)
 	return
 }

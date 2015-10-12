@@ -15,22 +15,25 @@ type FakeAPI struct {
 	id          int
 }
 
+// Me returns the bot user you set in FakeAPI
 func (f *FakeAPI) Me() (*User, error) {
 	return f.BotUser, nil
 }
 
+// SendMessage returns a new text message as if you sent the request to server
 func (f *FakeAPI) SendMessage(victim *User, text string, opt *Options) (*Message, error) {
 	return &Message{
-		Id:     rand.Int(),
+		ID:     rand.Int(),
 		Sender: f.BotUser,
 		Chat:   victim,
 		Text:   text,
 	}, nil
 }
 
-func (f *FakeAPI) ForwardMessage(victim, from *User, message_id int) (*Message, error) {
+// ForwardMessage returns a message as if you sent the request to server
+func (f *FakeAPI) ForwardMessage(victim, from *User, messageID int) (*Message, error) {
 	return &Message{
-		Id:     message_id,
+		ID:     messageID,
 		Sender: f.BotUser,
 		Chat:   victim,
 		Forward: &Forward{
@@ -40,9 +43,10 @@ func (f *FakeAPI) ForwardMessage(victim, from *User, message_id int) (*Message, 
 	}, nil
 }
 
+// SendPhoto returns a message as if you sent the request to server
 func (f *FakeAPI) SendPhoto(victim *User, file *File, caption string, opt *Options) (*Message, error) {
 	return &Message{
-		Id:     rand.Int(),
+		ID:     rand.Int(),
 		Sender: f.BotUser,
 		Chat:   victim,
 		Photo: []*PhotoSize{
@@ -52,9 +56,10 @@ func (f *FakeAPI) SendPhoto(victim *User, file *File, caption string, opt *Optio
 	}, nil
 }
 
+// SendAudio returns a message as if you sent the request to server
 func (f *FakeAPI) SendAudio(victim *User, file *File, duration int, performer, title string, opt *Options) (*Message, error) {
 	return &Message{
-		Id:     rand.Int(),
+		ID:     rand.Int(),
 		Sender: f.BotUser,
 		Chat:   victim,
 		Audio: &Audio{
@@ -66,9 +71,10 @@ func (f *FakeAPI) SendAudio(victim *User, file *File, duration int, performer, t
 	}, nil
 }
 
+// SendDocument returns a message as if you sent the request to server
 func (f *FakeAPI) SendDocument(victim *User, file *File, opt *Options) (*Message, error) {
 	return &Message{
-		Id:     rand.Int(),
+		ID:     rand.Int(),
 		Sender: f.BotUser,
 		Chat:   victim,
 		Document: &Document{
@@ -77,9 +83,10 @@ func (f *FakeAPI) SendDocument(victim *User, file *File, opt *Options) (*Message
 	}, nil
 }
 
+// SendSticker returns a message as if you sent the request to server
 func (f *FakeAPI) SendSticker(victim *User, file *File, opt *Options) (*Message, error) {
 	return &Message{
-		Id:     rand.Int(),
+		ID:     rand.Int(),
 		Sender: f.BotUser,
 		Chat:   victim,
 		Sticker: &Sticker{
@@ -88,9 +95,10 @@ func (f *FakeAPI) SendSticker(victim *User, file *File, opt *Options) (*Message,
 	}, nil
 }
 
+// SendVideo returns a message as if you sent the request to server
 func (f *FakeAPI) SendVideo(victim *User, file *File, duration int, caption string, opt *Options) (*Message, error) {
 	return &Message{
-		Id:     rand.Int(),
+		ID:     rand.Int(),
 		Sender: f.BotUser,
 		Chat:   victim,
 		Video: &Video{
@@ -101,9 +109,10 @@ func (f *FakeAPI) SendVideo(victim *User, file *File, duration int, caption stri
 	}, nil
 }
 
+// SendVoice returns a message as if you sent the request to server
 func (f *FakeAPI) SendVoice(victim *User, file *File, duration int, opt *Options) (*Message, error) {
 	return &Message{
-		Id:     rand.Int(),
+		ID:     rand.Int(),
 		Sender: f.BotUser,
 		Chat:   victim,
 		Video: &Video{
@@ -113,31 +122,37 @@ func (f *FakeAPI) SendVoice(victim *User, file *File, duration int, opt *Options
 	}, nil
 }
 
+// SendLocation returns a message as if you sent the request to server
 func (f *FakeAPI) SendLocation(victim *User, location *Location, opt *Options) (*Message, error) {
 	return &Message{
-		Id:       rand.Int(),
+		ID:       rand.Int(),
 		Sender:   f.BotUser,
 		Chat:     victim,
 		Location: location,
 	}, nil
 }
 
+// SendChatAction does nothing but return a nil
 func (f *FakeAPI) SendChatAction(victim *User, action ChatAction) error {
 	return nil
 }
 
+// GetProfilePhotos returns as if user have go profile photo
 func (f *FakeAPI) GetProfilePhotos(victim *User, offset, limit int) (*UserProfilePhotos, error) {
 	return new(UserProfilePhotos), nil
 }
 
+// GetAllProfilePhotos returns as if user have go profile photo
 func (f *FakeAPI) GetAllProfilePhotos(victim *User) (*UserProfilePhotos, error) {
 	return new(UserProfilePhotos), nil
 }
 
+// DownloadFile returns a reader from the file data you pass
 func (f *FakeAPI) DownloadFile(file *File) (io.Reader, error) {
 	return file.GetReader()
 }
 
+// GetUpdates gets the message from channel
 func (f *FakeAPI) GetUpdates(offset, limit, timeout int) (u []Update, err error) {
 	if offset < 1 {
 		offset = 1
@@ -164,6 +179,7 @@ func (f *FakeAPI) GetUpdates(offset, limit, timeout int) (u []Update, err error)
 	return
 }
 
-func (f *FakeAPI) SetWebhook(hook_url string, cert []byte) error {
+// SetWebhook does exactly nothing but returns a nil
+func (f *FakeAPI) SetWebhook(hookURL string, cert []byte) error {
 	return nil
 }

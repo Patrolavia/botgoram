@@ -20,7 +20,7 @@ type bot struct {
 	err error
 }
 
-func NewBot(token string) Bot {
+func newBot(token string) Bot {
 	return &bot{telegram.New(token), &sync.Mutex{}, nil}
 }
 
@@ -39,8 +39,8 @@ func (b *bot) Run(channel chan *telegram.Message, timeout int) error {
 				b.Unlock()
 			}
 			for _, update := range updates {
-				if update.Id >= offset {
-					offset = update.Id + 1
+				if update.ID >= offset {
+					offset = update.ID + 1
 				}
 				channel <- update.Message
 			}

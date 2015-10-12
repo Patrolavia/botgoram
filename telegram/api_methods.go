@@ -13,7 +13,7 @@ func optconv(opt *Options, u *User) (params url.Values, err error) {
 	if opt != nil {
 		params, err = opt.encode()
 	}
-	params.Set("chat_id", itoa(u.Id))
+	params.Set("chat_id", itoa(u.ID))
 	return
 }
 
@@ -34,7 +34,7 @@ func (a *api) SendMessage(victim *User, text string, opt *Options) (m *Message, 
 	if err != nil {
 		return
 	}
-	params.Set("chat_id", itoa(victim.Id))
+	params.Set("chat_id", itoa(victim.ID))
 	params.Set("text", text)
 	data, err := a.sendCommand("sendMessage", params)
 	if err != nil {
@@ -46,11 +46,11 @@ func (a *api) SendMessage(victim *User, text string, opt *Options) (m *Message, 
 	return
 }
 
-func (a *api) ForwardMessage(victim, from *User, message_id int) (m *Message, err error) {
+func (a *api) ForwardMessage(victim, from *User, messageID int) (m *Message, err error) {
 	params := url.Values{}
-	params.Set("chat_id", itoa(victim.Id))
-	params.Set("from_id", itoa(from.Id))
-	params.Set("message_id", itoa(message_id))
+	params.Set("chat_id", itoa(victim.ID))
+	params.Set("from_chat_id", itoa(from.ID))
+	params.Set("message_id", itoa(messageID))
 	data, err := a.sendCommand("forwardMessage", params)
 	if err != nil {
 		return
@@ -188,7 +188,7 @@ func (a *api) SendLocation(victim *User, location *Location, opt *Options) (m *M
 
 func (a *api) SendChatAction(victim *User, action ChatAction) (err error) {
 	params := url.Values{}
-	params.Set("chat_id", itoa(victim.Id))
+	params.Set("chat_id", itoa(victim.ID))
 	params.Set("action", string(action))
 	_, err = a.sendCommand("sendChatAction", params)
 	return
@@ -196,7 +196,7 @@ func (a *api) SendChatAction(victim *User, action ChatAction) (err error) {
 
 func (a *api) GetProfilePhotos(victim *User, offset, limit int) (p *UserProfilePhotos, err error) {
 	params := url.Values{}
-	params.Set("chat_id", itoa(victim.Id))
+	params.Set("chat_id", itoa(victim.ID))
 	params.Set("offset", itoa(offset))
 	params.Set("limit", itoa(limit))
 	data, err := a.sendCommand("getUserProfilePhotos", params)
@@ -210,7 +210,7 @@ func (a *api) GetProfilePhotos(victim *User, offset, limit int) (p *UserProfileP
 
 func (a *api) GetAllProfilePhotos(victim *User) (p *UserProfilePhotos, err error) {
 	params := url.Values{}
-	params.Set("chat_id", itoa(victim.Id))
+	params.Set("chat_id", itoa(victim.ID))
 	data, err := a.sendCommand("getUserProfilePhotos", params)
 	if err != nil {
 		return
@@ -221,17 +221,17 @@ func (a *api) GetAllProfilePhotos(victim *User) (p *UserProfilePhotos, err error
 }
 
 func (a *api) DownloadFile(file *File) (r io.Reader, err error) {
-	if file.Id == "" {
+	if file.ID == "" {
 		return r, errors.New("file_id not specified, not remote file?")
 	}
 	type fileToken struct {
-		Id   string `json:"file_id"`
+		ID   string `json:"file_id"`
 		Size int    `json:"file_size,omitempty"`
 		Path string `json:"file_path"`
 	}
 
 	params := url.Values{}
-	params.Set("file_id", file.Id)
+	params.Set("file_id", file.ID)
 	data, err := a.sendCommand("getFile", params)
 	if err != nil {
 		return
@@ -267,10 +267,10 @@ func (a *api) GetUpdates(offset, limit, timeout int) (u []Update, err error) {
 	return
 }
 
-func (a *api) SetWebhook(hook_url string, cert []byte) (err error) {
+func (a *api) SetWebhook(hookURL string, cert []byte) (err error) {
 	params := url.Values{}
-	if hook_url != "" {
-		params.Set("url", hook_url)
+	if hookURL != "" {
+		params.Set("url", hookURL)
 	}
 	if cert != nil {
 		f := &File{Filename: "server.cert", Stream: bytes.NewReader(cert)}

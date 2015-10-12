@@ -8,7 +8,7 @@ import (
 
 // User struct represents a Telegram user or chat group.
 type User struct {
-	Id        int    `json:"id"`                   // Unique identifier for this user or bot
+	ID        int    `json:"id"`                   // Unique identifier for this user or bot
 	FirstName string `json:"first_name,omitempty"` // User‘s or bot’s first name
 	LastName  string `json:"last_name,omitempty"`  // Optional. User‘s or bot’s last name
 	Username  string `json:"username,omitempty"`   // Optional. User‘s or bot’s username
@@ -40,12 +40,12 @@ func (u User) Name() string {
 //
 // Sending local file
 //
-// A File struct with empty Id field is considered as local file, calling API methods with local file will upload it.
+// A File struct with empty ID field is considered as local file, calling API methods with local file will upload it.
 // API methods first try read from Stream field, so you can generate something (an image for example) and send it to your user without cache it in disk.
 // Then it tries to open file specified in Filename field.
 // If neither is possible, it would return in error.
 type File struct {
-	Id       string    `json:"file_id"`             // Unique identifier for this file
+	ID       string    `json:"file_id"`             // Unique identifier for this file
 	MimeType string    `json:"mime_type,omitempty"` // Optional. MIME type of the file as defined by sender
 	Size     int       `json:"file_size,omitempty"` // Optional. File size
 	Filename string    `json:"file_name,omitempty"` // Optional. Local file name
@@ -112,7 +112,7 @@ type Contact struct {
 	Number    string `json:"phone_number"`      // Contact's phone number
 	FirstName string `json:"first_name"`        // Contact's first name
 	LastName  string `json:"last_name"`         // Contact's last name
-	UserId    int    `json:"user_id,omitempty"` // Optional. Contact's user identifier in Telegram
+	UserID    int    `json:"user_id,omitempty"` // Optional. Contact's user identifier in Telegram
 }
 
 // Location represents a point on the map.
@@ -156,7 +156,7 @@ const (
 
 // Message represents a message.
 type Message struct {
-	Id               int          `json:"message_id"` // Unique message identifier
+	ID               int          `json:"message_id"` // Unique message identifier
 	Sender           *User        `json:"from"`       // Sender
 	Timestamp        int64        `json:"date"`       // Date the message was sent in Unix time.
 	Chat             *User        `json:"chat"`       // Conversation the message belongs to — user in case of a private message, GroupChat in case of a group
@@ -208,7 +208,7 @@ func (m Message) Type() (ret MessageType) {
 
 // Update represents an incoming update.
 type Update struct {
-	Id      int      `json:"update_id"` // The update‘s unique identifier.
+	ID      int      `json:"update_id"` // The update‘s unique identifier.
 	Message *Message `json:"message"`   // Optional. New incoming message of any kind — text, photo, sticker, etc.
 }
 

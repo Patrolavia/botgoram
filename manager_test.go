@@ -9,7 +9,7 @@ import (
 
 func makeTestUser(name string) *telegram.User {
 	return &telegram.User{
-		Id:        rand.Int(),
+		ID:        rand.Int(),
 		FirstName: name,
 	}
 }
@@ -21,13 +21,13 @@ func TestManagerWithTwoUser(t *testing.T) {
 
 	m := newManager(bySender, 2)
 	m1 := &telegram.Message{
-		Id:     1,
+		ID:     1,
 		Text:   "test",
 		Sender: u1,
 		Chat:   u1,
 	}
 	m2 := &telegram.Message{
-		Id:     2,
+		ID:     2,
 		Text:   "test",
 		Sender: u2,
 		Chat:   u2,
@@ -49,13 +49,13 @@ func TestManagerWithOneUser(t *testing.T) {
 
 	m := newManager(bySender, 2)
 	m1 := &telegram.Message{
-		Id:     1,
+		ID:     1,
 		Text:   "test",
 		Sender: u1,
 		Chat:   u1,
 	}
 	m2 := &telegram.Message{
-		Id:     2,
+		ID:     2,
 		Text:   "test",
 		Sender: u1,
 		Chat:   u1,

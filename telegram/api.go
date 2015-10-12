@@ -16,7 +16,7 @@ import (
 type API interface {
 	Me() (*User, error)
 	SendMessage(victim *User, text string, opt *Options) (*Message, error)
-	ForwardMessage(victim, from *User, message_id int) (*Message, error)
+	ForwardMessage(victim, from *User, messageID int) (*Message, error)
 	SendPhoto(victim *User, file *File, caption string, opt *Options) (*Message, error)
 	SendAudio(victim *User, file *File, duration int, performer, title string, opt *Options) (*Message, error)
 	SendDocument(victim *User, file *File, opt *Options) (*Message, error)
@@ -29,7 +29,7 @@ type API interface {
 	GetAllProfilePhotos(victim *User) (*UserProfilePhotos, error)
 	DownloadFile(file *File) (io.Reader, error)
 	GetUpdates(offset, limit, timeout int) ([]Update, error)
-	SetWebhook(hook_url string, cert []byte) error
+	SetWebhook(hookURL string, cert []byte) error
 }
 
 type api struct {
@@ -69,8 +69,8 @@ func (a *api) sendCommand(method string, params url.Values) (ret []byte, err err
 }
 
 func (a api) sendFile(method, name string, file *File, params url.Values) (ret []byte, err error) {
-	if file.Id != "" {
-		params.Set(name, file.Id)
+	if file.ID != "" {
+		params.Set(name, file.ID)
 		return a.sendCommand(method, params)
 	}
 	s, err := file.GetReader()
