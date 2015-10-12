@@ -8,7 +8,7 @@ Current it is still under development, not usable for now.
 
 ### State based
 
-We think the work flow for bot is like a [Finite State Machine](https://en.wikipedia.org/wiki/Finite-state_machine): given current state, transit to next state acording to the input. We write code to choose right state, and to define what to to when entering/ leaving a state.
+We think the work flow for bot is like a [Finite State Machine](https://en.wikipedia.org/wiki/Finite-state_machine): given current state, transit to next state acording to the input. We write code to choose right state, and define what to do when entering/ leaving a state.
 
 ## Synopsis
 
@@ -16,7 +16,7 @@ See [example code on godoc.org](https://godoc.org/github.com/Patrolavia/botgoram
 
 ## But how can I convert my business logic to a state machine
 
-It depends. Draw a flowchart, especially a data flowchart, and treat each unit as a state might be a reasonable start. The "state pattern", "Automata-based programming" on wikipedia might also give you some thought.
+It depends. Draw a flowchart, especially a data flowchart, and treat each unit as a state might be a reasonable start. The [state pattern](https://en.wikipedia.org/wiki/State_pattern), [Automata-based programming](https://en.wikipedia.org/wiki/Automata-based_programming) on wikipedia might also give you some thoughts.
 
 ## It looks so complicate!
 
