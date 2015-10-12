@@ -142,38 +142,25 @@ func (f *fsm) Start(timeout int) error {
 	if err := f.registerStateMapTransitors(); err != nil {
 		return err
 	}
-	go func() {
-		offset := 0
-		for {
-			us, err := f.api.GetUpdates(offset, 0, timeout)
-			if err != nil {
-				continue
-			}
 
-			for _, u := range us {
-				if offset <= u.Id {
-					offset = u.Id + 1
-				}
-				f.manager.feed(u.Message)
-			}
-		}
-	}()
+	// start message manager
+	go f.manager.Run(f.api, timeout)
+
+	// start worker goroutines
 	return f.Resume()
 }
 
 func (f *fsm) Resume() error {
-	id := 0
 	for err := range f.error_chan {
 		if err != nil {
 			return err
 		}
-		id++
-		go func() { f.error_chan <- f.work(id) }()
+		go func() { f.error_chan <- f.work() }()
 	}
 	return nil
 }
 
-func (f *fsm) work(id int) (err error) {
+func (f *fsm) work() (err error) {
 	msg := f.manager.Begin()
 	defer f.manager.Rollback(msg)
 

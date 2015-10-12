@@ -20,7 +20,7 @@ func newManager(f func(*telegram.Message) *telegram.User, size int) *manager {
 	return &manager{
 		size,
 		make(map[int]bool),
-		make([]*telegram.Message, 0, size),
+		nil,
 		l,
 		sync.NewCond(l),
 		f,
@@ -79,12 +79,39 @@ func (m *manager) Begin() *telegram.Message {
 	return msg
 }
 
-func (m *manager) feed(msg *telegram.Message) {
-	defer m.cond.Signal()
+func (m *manager) Run(api telegram.API, timeout int) {
+	offset := 0
+	// Set limit to double of max goroutines
+	// This can improve performance without using too much memory.
+	limit := m.size * 2
+	for {
+		updates, err := api.GetUpdates(offset, limit, timeout)
+
+		// just try again if no pending message or any error
+		if err != nil || len(updates) < 1 {
+			continue
+		}
+
+		msgs := make([]*telegram.Message, len(updates))
+		for k, v := range updates {
+			msgs[k] = v.Message
+			if offset <= v.Id {
+				offset = v.Id + 1
+			}
+		}
+		m.feed(msgs)
+	}
+}
+
+func (m *manager) feed(msgs []*telegram.Message) {
+	m.lock.Lock()
+	m.msgQ = msgs
+	m.lock.Unlock()
+	m.cond.Signal()
+
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	for len(m.msgQ) >= m.size {
+	for len(m.msgQ) > 0 || len(m.running_users) >= m.size {
 		m.cond.Wait()
 	}
-	m.msgQ = append(m.msgQ, msg)
 }
