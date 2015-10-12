@@ -12,39 +12,11 @@ We think the work flow for bot is like a [Finite State Machine](https://en.wikip
 
 ## Synopsis
 
-```go
-// create a fsm, using message.Sender.Id as primary key,
-// up to 5 users at the same time, save state data (integer) in memory.
-fsm, err := botgoram.NewBySender(
-	"my-token",
-	botgoram.MemoryStore(func(uid int) interface{} {
-		return 0
-	}),
-	5)
+See [example code on godoc.org](https://godoc.org/github.com/Patrolavia/botgoram#example-package).
 
-// allocate a state
-fsm.AddState(
-	"hello world",
-	func(msg *telegram.Message, current botgoram.State, api telegram.API) error {
-		api.SendMessage(current.User(), "Hello, you're entring world state", nil)
-		current.Transit(botgoram.InitialState) // go back to initial state
-	},
-	func(msg *telegram.Message, current botgoram.State, api telegram.API) error {
-		api.SendMessage(current.User(), "Hello, you're leaving world state", nil)
-	})
+## But how can I convert my business logic to a state machine
 
-init_state, ok := fsm.State(botgoram.InitialState)
-if !ok {
-    panic("Cannot get initial state.")
-}
-
-init_state.RegisterFallback(
-	func(m *telegram.Message, d interface{}, u *telegram.User, c string) (string, error) {
-		return "hello world", nil
-})
-
-log.Fatal(fsm.Start(30))
-```
+It depends. Draw a flowchart, especially a data flowchart, and treat each unit as a state might be a reasonable start. The "state pattern", "Automata-based programming" on wikipedia might also give you some thought.
 
 ## It looks so complicate!
 
