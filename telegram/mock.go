@@ -8,7 +8,7 @@ import (
 
 // FakeAPI implements API interface and does exactly nothing.
 // You can pass a channel to provide custom message data, which will be used in GetUpdates method.
-// Most identifiers are random-generated.
+// Most identifiers are random-generated, use with cares.
 type FakeAPI struct {
 	BotUser     *User
 	MessagePipe chan *Message
@@ -138,16 +138,27 @@ func (f *FakeAPI) DownloadFile(file *File) (io.Reader, error) {
 	return file.GetReader()
 }
 
-// offset and limit is not used.
 func (f *FakeAPI) GetUpdates(offset, limit, timeout int) (u []Update, err error) {
-	select {
-	case msg := <-f.MessagePipe:
-		f.id++
-		u = []Update{Update{f.id, msg}}
-	default:
-		u = []Update{}
-		if timeout > 0 {
-			time.Sleep(time.Duration(timeout) * time.Second)
+	if offset < 1 {
+		offset = 1
+	}
+	if limit < 1 {
+		limit = 1
+	}
+	u = make([]Update, 0, limit)
+	for ; limit > 0; limit-- {
+		select {
+		case msg := <-f.MessagePipe:
+			u = append(u, Update{offset, msg})
+			offset++
+		default:
+			if timeout > 0 {
+				time.Sleep(time.Duration(timeout) * time.Second)
+				// ignore err, because we'll never have network problem
+				uu, _ := f.GetUpdates(offset, limit, 0)
+				u = append(u, uu...)
+			}
+			return
 		}
 	}
 	return
