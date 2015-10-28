@@ -21,21 +21,21 @@ func (f *FakeAPI) Me() (*User, error) {
 }
 
 // SendMessage returns a new text message as if you sent the request to server
-func (f *FakeAPI) SendMessage(victim *User, text string, opt *Options) (*Message, error) {
+func (f *FakeAPI) SendMessage(victim Recipient, text string, opt *Options) (*Message, error) {
 	return &Message{
 		ID:     rand.Int(),
 		Sender: f.BotUser,
-		Chat:   victim,
+		Chat:   victim.ToChat(),
 		Text:   text,
 	}, nil
 }
 
 // ForwardMessage returns a message as if you sent the request to server
-func (f *FakeAPI) ForwardMessage(victim, from *User, messageID int) (*Message, error) {
+func (f *FakeAPI) ForwardMessage(victim, from Recipient, messageID int) (*Message, error) {
 	return &Message{
 		ID:     messageID,
 		Sender: f.BotUser,
-		Chat:   victim,
+		Chat:   victim.ToChat(),
 		Forward: &Forward{
 			From:      f.BotUser,
 			Timestamp: time.Now().Unix(),
@@ -44,11 +44,11 @@ func (f *FakeAPI) ForwardMessage(victim, from *User, messageID int) (*Message, e
 }
 
 // SendPhoto returns a message as if you sent the request to server
-func (f *FakeAPI) SendPhoto(victim *User, file *File, caption string, opt *Options) (*Message, error) {
+func (f *FakeAPI) SendPhoto(victim Recipient, file *File, caption string, opt *Options) (*Message, error) {
 	return &Message{
 		ID:     rand.Int(),
 		Sender: f.BotUser,
-		Chat:   victim,
+		Chat:   victim.ToChat(),
 		Photo: []*PhotoSize{
 			&PhotoSize{File: file},
 		},
@@ -57,11 +57,11 @@ func (f *FakeAPI) SendPhoto(victim *User, file *File, caption string, opt *Optio
 }
 
 // SendAudio returns a message as if you sent the request to server
-func (f *FakeAPI) SendAudio(victim *User, file *File, duration int, performer, title string, opt *Options) (*Message, error) {
+func (f *FakeAPI) SendAudio(victim Recipient, file *File, duration int, performer, title string, opt *Options) (*Message, error) {
 	return &Message{
 		ID:     rand.Int(),
 		Sender: f.BotUser,
-		Chat:   victim,
+		Chat:   victim.ToChat(),
 		Audio: &Audio{
 			File:      file,
 			Duration:  duration,
@@ -72,11 +72,11 @@ func (f *FakeAPI) SendAudio(victim *User, file *File, duration int, performer, t
 }
 
 // SendDocument returns a message as if you sent the request to server
-func (f *FakeAPI) SendDocument(victim *User, file *File, opt *Options) (*Message, error) {
+func (f *FakeAPI) SendDocument(victim Recipient, file *File, opt *Options) (*Message, error) {
 	return &Message{
 		ID:     rand.Int(),
 		Sender: f.BotUser,
-		Chat:   victim,
+		Chat:   victim.ToChat(),
 		Document: &Document{
 			File: file,
 		},
@@ -84,11 +84,11 @@ func (f *FakeAPI) SendDocument(victim *User, file *File, opt *Options) (*Message
 }
 
 // SendSticker returns a message as if you sent the request to server
-func (f *FakeAPI) SendSticker(victim *User, file *File, opt *Options) (*Message, error) {
+func (f *FakeAPI) SendSticker(victim Recipient, file *File, opt *Options) (*Message, error) {
 	return &Message{
 		ID:     rand.Int(),
 		Sender: f.BotUser,
-		Chat:   victim,
+		Chat:   victim.ToChat(),
 		Sticker: &Sticker{
 			File: file,
 		},
@@ -96,11 +96,11 @@ func (f *FakeAPI) SendSticker(victim *User, file *File, opt *Options) (*Message,
 }
 
 // SendVideo returns a message as if you sent the request to server
-func (f *FakeAPI) SendVideo(victim *User, file *File, duration int, caption string, opt *Options) (*Message, error) {
+func (f *FakeAPI) SendVideo(victim Recipient, file *File, duration int, caption string, opt *Options) (*Message, error) {
 	return &Message{
 		ID:     rand.Int(),
 		Sender: f.BotUser,
-		Chat:   victim,
+		Chat:   victim.ToChat(),
 		Video: &Video{
 			File:     file,
 			Duration: duration,
@@ -110,11 +110,11 @@ func (f *FakeAPI) SendVideo(victim *User, file *File, duration int, caption stri
 }
 
 // SendVoice returns a message as if you sent the request to server
-func (f *FakeAPI) SendVoice(victim *User, file *File, duration int, opt *Options) (*Message, error) {
+func (f *FakeAPI) SendVoice(victim Recipient, file *File, duration int, opt *Options) (*Message, error) {
 	return &Message{
 		ID:     rand.Int(),
 		Sender: f.BotUser,
-		Chat:   victim,
+		Chat:   victim.ToChat(),
 		Video: &Video{
 			File:     file,
 			Duration: duration,
@@ -123,17 +123,17 @@ func (f *FakeAPI) SendVoice(victim *User, file *File, duration int, opt *Options
 }
 
 // SendLocation returns a message as if you sent the request to server
-func (f *FakeAPI) SendLocation(victim *User, location *Location, opt *Options) (*Message, error) {
+func (f *FakeAPI) SendLocation(victim Recipient, location *Location, opt *Options) (*Message, error) {
 	return &Message{
 		ID:       rand.Int(),
 		Sender:   f.BotUser,
-		Chat:     victim,
+		Chat:     victim.ToChat(),
 		Location: location,
 	}, nil
 }
 
 // SendChatAction does nothing but return a nil
-func (f *FakeAPI) SendChatAction(victim *User, action ChatAction) error {
+func (f *FakeAPI) SendChatAction(victim Recipient, action ChatAction) error {
 	return nil
 }
 

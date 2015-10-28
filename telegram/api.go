@@ -15,16 +15,16 @@ import (
 // API represents all Telegram Bot APIs
 type API interface {
 	Me() (*User, error)
-	SendMessage(victim *User, text string, opt *Options) (*Message, error)
-	ForwardMessage(victim, from *User, messageID int) (*Message, error)
-	SendPhoto(victim *User, file *File, caption string, opt *Options) (*Message, error)
-	SendAudio(victim *User, file *File, duration int, performer, title string, opt *Options) (*Message, error)
-	SendDocument(victim *User, file *File, opt *Options) (*Message, error)
-	SendSticker(victim *User, file *File, opt *Options) (*Message, error)
-	SendVideo(victim *User, file *File, duration int, caption string, opt *Options) (*Message, error)
-	SendVoice(victim *User, file *File, duration int, opt *Options) (*Message, error)
-	SendLocation(victim *User, location *Location, opt *Options) (*Message, error)
-	SendChatAction(victim *User, action ChatAction) error
+	SendMessage(victim Recipient, text string, opt *Options) (*Message, error)
+	ForwardMessage(victim, from Recipient, messageID int) (*Message, error)
+	SendPhoto(victim Recipient, file *File, caption string, opt *Options) (*Message, error)
+	SendAudio(victim Recipient, file *File, duration int, performer, title string, opt *Options) (*Message, error)
+	SendDocument(victim Recipient, file *File, opt *Options) (*Message, error)
+	SendSticker(victim Recipient, file *File, opt *Options) (*Message, error)
+	SendVideo(victim Recipient, file *File, duration int, caption string, opt *Options) (*Message, error)
+	SendVoice(victim Recipient, file *File, duration int, opt *Options) (*Message, error)
+	SendLocation(victim Recipient, location *Location, opt *Options) (*Message, error)
+	SendChatAction(victim Recipient, action ChatAction) error
 	GetProfilePhotos(victim *User, offset, limit int) (*UserProfilePhotos, error)
 	GetAllProfilePhotos(victim *User) (*UserProfilePhotos, error)
 	DownloadFile(file *File) (io.Reader, error)

@@ -4,7 +4,15 @@ import (
 	"errors"
 	"io"
 	"os"
+	"strconv"
 )
+
+// Recipient is abstract parent for User and Chat
+type Recipient interface {
+	Identifier() string
+	ToUser() *User
+	ToChat() *Chat
+}
 
 // User struct represents a Telegram user or chat group.
 type User struct {
@@ -15,7 +23,23 @@ type User struct {
 	Title     string `json:"title,omitempty"`      // Group name
 }
 
-// IsGroup returns true if this User object denotes a Telegram char group.
+func (u User) Identifier() string {
+	return strconv.Itoa(u.ID)
+}
+
+func (u User) ToUser() *User {
+	return &u
+}
+
+func (u User) ToChat() *Chat {
+	t := `private`
+	if u.IsGroup() {
+		t = `group`
+	}
+	return &Chat{&u, t}
+}
+
+// IsGroup returns true if this User object denotes a Telegram chat group.
 func (u User) IsGroup() bool {
 	return u.Title != ""
 }
@@ -33,6 +57,27 @@ func (u User) Name() string {
 		ret += "(" + u.Username + ")"
 	}
 	return ret
+}
+
+// type Chat represents a chat
+type Chat struct {
+	*User
+	Type string `json:"type"` // Type of chat, can be either “private”, or “group”, or “channel”
+}
+
+func (c Chat) Identifier() string {
+	if c.Type == `channel` {
+		return c.User.Username
+	}
+	return c.User.Identifier()
+}
+
+func (c Chat) ToUser() *User {
+	return c.User
+}
+
+func (c Chat) ToChat() *Chat {
+	return &c
 }
 
 // File represents a regular file for sending.
@@ -159,7 +204,7 @@ type Message struct {
 	ID               int          `json:"message_id"` // Unique message identifier
 	Sender           *User        `json:"from"`       // Sender
 	Timestamp        int64        `json:"date"`       // Date the message was sent in Unix time.
-	Chat             *User        `json:"chat"`       // Conversation the message belongs to — user in case of a private message, GroupChat in case of a group
+	Chat             *Chat        `json:"chat"`       // Conversation the message belongs to — user in case of a private message, GroupChat in case of a group
 	*Forward                      // Optional
 	ReplyTo          *Message     `json:"reply_to_message,omitempty"`      // Optional. For replies, the original message.
 	Text             string       `json:"text,omitempty"`                  // Optional. For text messages, the actual UTF-8 text of the message

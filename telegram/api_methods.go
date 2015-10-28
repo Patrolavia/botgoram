@@ -8,12 +8,12 @@ import (
 	"net/url"
 )
 
-func optconv(opt *Options, u *User) (params url.Values, err error) {
+func optconv(opt *Options, u Recipient) (params url.Values, err error) {
 	params = url.Values{}
 	if opt != nil {
 		params, err = opt.encode()
 	}
-	params.Set("chat_id", itoa(u.ID))
+	params.Set("chat_id", u.Identifier())
 	return
 }
 
@@ -29,12 +29,11 @@ func (a *api) Me() (u *User, err error) {
 	return
 }
 
-func (a *api) SendMessage(victim *User, text string, opt *Options) (m *Message, err error) {
+func (a *api) SendMessage(victim Recipient, text string, opt *Options) (m *Message, err error) {
 	params, err := optconv(opt, victim)
 	if err != nil {
 		return
 	}
-	params.Set("chat_id", itoa(victim.ID))
 	params.Set("text", text)
 	data, err := a.sendCommand("sendMessage", params)
 	if err != nil {
@@ -46,10 +45,10 @@ func (a *api) SendMessage(victim *User, text string, opt *Options) (m *Message, 
 	return
 }
 
-func (a *api) ForwardMessage(victim, from *User, messageID int) (m *Message, err error) {
+func (a *api) ForwardMessage(victim, from Recipient, messageID int) (m *Message, err error) {
 	params := url.Values{}
-	params.Set("chat_id", itoa(victim.ID))
-	params.Set("from_chat_id", itoa(from.ID))
+	params.Set("chat_id", victim.Identifier())
+	params.Set("from_chat_id", from.Identifier())
 	params.Set("message_id", itoa(messageID))
 	data, err := a.sendCommand("forwardMessage", params)
 	if err != nil {
@@ -61,7 +60,7 @@ func (a *api) ForwardMessage(victim, from *User, messageID int) (m *Message, err
 	return
 }
 
-func (a *api) SendPhoto(victim *User, file *File, caption string, opt *Options) (m *Message, err error) {
+func (a *api) SendPhoto(victim Recipient, file *File, caption string, opt *Options) (m *Message, err error) {
 	params, err := optconv(opt, victim)
 	if err != nil {
 		return
@@ -76,7 +75,7 @@ func (a *api) SendPhoto(victim *User, file *File, caption string, opt *Options) 
 	return
 }
 
-func (a *api) SendAudio(victim *User, file *File, duration int,
+func (a *api) SendAudio(victim Recipient, file *File, duration int,
 	performer, title string, opt *Options) (m *Message, err error) {
 
 	params, err := optconv(opt, victim)
@@ -101,7 +100,7 @@ func (a *api) SendAudio(victim *User, file *File, duration int,
 	return
 }
 
-func (a *api) SendDocument(victim *User, file *File, opt *Options) (m *Message, err error) {
+func (a *api) SendDocument(victim Recipient, file *File, opt *Options) (m *Message, err error) {
 	params, err := optconv(opt, victim)
 	if err != nil {
 		return
@@ -115,7 +114,7 @@ func (a *api) SendDocument(victim *User, file *File, opt *Options) (m *Message, 
 	return
 }
 
-func (a *api) SendSticker(victim *User, file *File, opt *Options) (m *Message, err error) {
+func (a *api) SendSticker(victim Recipient, file *File, opt *Options) (m *Message, err error) {
 	params, err := optconv(opt, victim)
 	if err != nil {
 		return
@@ -129,7 +128,7 @@ func (a *api) SendSticker(victim *User, file *File, opt *Options) (m *Message, e
 	return
 }
 
-func (a *api) SendVideo(victim *User, file *File,
+func (a *api) SendVideo(victim Recipient, file *File,
 	duration int, caption string, opt *Options) (m *Message, err error) {
 
 	params, err := optconv(opt, victim)
@@ -152,7 +151,7 @@ func (a *api) SendVideo(victim *User, file *File,
 	return
 }
 
-func (a *api) SendVoice(victim *User, file *File, duration int, opt *Options) (m *Message, err error) {
+func (a *api) SendVoice(victim Recipient, file *File, duration int, opt *Options) (m *Message, err error) {
 	params, err := optconv(opt, victim)
 	if err != nil {
 		return
@@ -170,7 +169,7 @@ func (a *api) SendVoice(victim *User, file *File, duration int, opt *Options) (m
 	return
 }
 
-func (a *api) SendLocation(victim *User, location *Location, opt *Options) (m *Message, err error) {
+func (a *api) SendLocation(victim Recipient, location *Location, opt *Options) (m *Message, err error) {
 	params, err := optconv(opt, victim)
 	if err != nil {
 		return
@@ -186,9 +185,8 @@ func (a *api) SendLocation(victim *User, location *Location, opt *Options) (m *M
 	return
 }
 
-func (a *api) SendChatAction(victim *User, action ChatAction) (err error) {
+func (a *api) SendChatAction(victim Recipient, action ChatAction) (err error) {
 	params := url.Values{}
-	params.Set("chat_id", itoa(victim.ID))
 	params.Set("action", string(action))
 	_, err = a.sendCommand("sendChatAction", params)
 	return
