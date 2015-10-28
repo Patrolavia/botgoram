@@ -53,7 +53,7 @@ type Transitor func(msg *telegram.Message, state State) (next string, err error)
 type State interface {
 	Data() interface{}
 	SetData(interface{})
-	User() *telegram.User // who this state associate with
+	User() telegram.Recipient // who this state associate with
 	ID() string           // retrive current state id
 	Transit(id string)    // directly transit to another state without transitor
 	// Transit again base on this state.
@@ -73,7 +73,7 @@ type State interface {
 
 	RegisterFallback(Transitor)
 	test(msg *telegram.Message) (next string, err error)
-	clone(user *telegram.User) State
+	clone(user telegram.Recipient) State
 	next() *string
 	re() bool
 }
@@ -92,7 +92,7 @@ func (ts transitors) test(msg *telegram.Message, cur State) (next string, err er
 
 type state struct {
 	data      interface{}
-	user      *telegram.User
+	user      telegram.Recipient
 	id        string
 	forward   transitors
 	reply     transitors
@@ -112,7 +112,7 @@ func newState(id string) State {
 	}
 }
 
-func (s *state) clone(user *telegram.User) State {
+func (s *state) clone(user telegram.Recipient) State {
 	c := *s
 	c.user = user
 	return &c
@@ -142,7 +142,7 @@ func (s *state) SetData(data interface{}) {
 	s.data = data
 }
 
-func (s *state) User() *telegram.User {
+func (s *state) User() telegram.Recipient {
 	return s.user
 }
 

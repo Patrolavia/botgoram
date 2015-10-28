@@ -11,7 +11,7 @@ func TestTypeTransitors(t *testing.T) {
 	m := func() *telegram.Message {
 		return &telegram.Message{
 			Sender: &telegram.User{},
-			Chat: &telegram.User{},
+			Chat:   (&telegram.User{}).ToChat(),
 		}
 	}
 	factory := func(result string) Transitor {
@@ -102,14 +102,14 @@ func TestTypeTransitors(t *testing.T) {
 
 	// command
 	msg = m()
-	msg.Text="Command"
+	msg.Text = "Command"
 	if next, _ := st.test(msg); next != "Command" {
 		t.Errorf("While testing command transitor: get next state %s", next)
 	}
 
 	// command mismatch, fallback to text transitor
 	msg = m()
-	msg.Text="Command2"
+	msg.Text = "Command2"
 	if next, _ := st.test(msg); next != telegram.TEXT.String() {
 		t.Errorf("While testing command transitor: not fallback to text, get next state %s", next)
 	}

@@ -7,19 +7,19 @@ import (
 )
 
 type manager struct {
-	size          int
-	runningUsers map[int]bool
-	msgQ          []*telegram.Message
-	lock          sync.Locker
-	cond          *sync.Cond
-	getUID        func(*telegram.Message) *telegram.User
+	size         int
+	runningUsers map[string]bool
+	msgQ         []*telegram.Message
+	lock         sync.Locker
+	cond         *sync.Cond
+	getUID       func(*telegram.Message) telegram.Recipient
 }
 
-func newManager(f func(*telegram.Message) *telegram.User, size int) *manager {
+func newManager(f func(*telegram.Message) telegram.Recipient, size int) *manager {
 	l := new(sync.Mutex)
 	return &manager{
 		size,
-		make(map[int]bool),
+		make(map[string]bool),
 		nil,
 		l,
 		sync.NewCond(l),
@@ -27,13 +27,13 @@ func newManager(f func(*telegram.Message) *telegram.User, size int) *manager {
 	}
 }
 
-func (m *manager) GetUID(msg *telegram.Message) *telegram.User {
+func (m *manager) GetUID(msg *telegram.Message) telegram.Recipient {
 	return m.getUID(msg)
 }
 
 func (m *manager) Commit(msg *telegram.Message) {
 	m.lock.Lock()
-	delete(m.runningUsers, m.getUID(msg).ID)
+	delete(m.runningUsers, m.getUID(msg).Identifier())
 	// delete msg from Q
 	for k, mm := range m.msgQ {
 		if mm.ID == msg.ID {
@@ -49,19 +49,19 @@ func (m *manager) Commit(msg *telegram.Message) {
 }
 
 func (m *manager) Rollback(msg *telegram.Message) {
-	if ok := m.runningUsers[m.getUID(msg).ID]; !ok {
+	if ok := m.runningUsers[m.getUID(msg).Identifier()]; !ok {
 		return
 	}
 	m.lock.Lock()
-	delete(m.runningUsers, m.getUID(msg).ID)
+	delete(m.runningUsers, m.getUID(msg).Identifier())
 	m.lock.Unlock()
 	m.cond.Signal()
 }
 
 func (m *manager) getFirstNew() (ret *telegram.Message) {
 	for _, msg := range m.msgQ {
-		if !m.runningUsers[m.getUID(msg).ID] {
-			m.runningUsers[m.getUID(msg).ID] = true
+		if !m.runningUsers[m.getUID(msg).Identifier()] {
+			m.runningUsers[m.getUID(msg).Identifier()] = true
 			return msg
 		}
 	}

@@ -30,11 +30,11 @@ type FSM interface {
 	StateMap(name string) (dot string)
 }
 
-func bySender(msg *telegram.Message) *telegram.User {
+func bySender(msg *telegram.Message) telegram.Recipient {
 	return msg.Sender
 }
 
-func byChat(msg *telegram.Message) *telegram.User {
+func byChat(msg *telegram.Message) telegram.Recipient {
 	return msg.Chat
 }
 
@@ -46,15 +46,15 @@ type internalStateData struct {
 
 type fsm struct {
 	api           telegram.API
-	userExtractor func(*telegram.Message) *telegram.User
+	userExtractor func(*telegram.Message) telegram.Recipient
 	states        map[string]internalStateData
 	storage       SaveLoader
 	manager       *manager
-	errorChannel    chan error
+	errorChannel  chan error
 	sm            []StateMaker
 }
 
-func newFSM(api telegram.API, ue func(*telegram.Message) *telegram.User, sl SaveLoader, size int) (ret FSM) {
+func newFSM(api telegram.API, ue func(*telegram.Message) telegram.Recipient, sl SaveLoader, size int) (ret FSM) {
 	tmp := &fsm{
 		api, ue, map[string]internalStateData{
 			"": internalStateData{state: newState("")},
@@ -159,14 +159,14 @@ func (f *fsm) work() (err error) {
 	defer f.manager.Rollback(msg)
 
 	user := f.userExtractor(msg)
-	sid, data, err := f.storage.Load(user.ID)
+	sid, data, err := f.storage.Load(user.Identifier())
 	if err != nil {
 		return
 	}
 
 	currentNode, ok := f.states[sid]
 	if !ok {
-		return fmt.Errorf("Cannot load state[%s] of user#%d", sid, user.ID)
+		return fmt.Errorf("Cannot load state[%s] of user#%s", sid, user.Identifier())
 	}
 	cur := currentNode.state.clone(user)
 	cur.SetData(data)
@@ -185,7 +185,7 @@ func (f *fsm) work() (err error) {
 		return
 	}
 
-	for ;next.re(); {
+	for next.re() {
 		if next, err = doNext(next, msg); err != nil {
 			return
 		}
@@ -199,12 +199,12 @@ func (f *fsm) transit(msg *telegram.Message, current State, id string) (next Sta
 	user := current.User()
 	currentNode, ok := f.states[current.ID()]
 	if !ok {
-		return next, fmt.Errorf("Cannot load state[%s] of user#%d", current.ID(), user.ID)
+		return next, fmt.Errorf("Cannot load state[%s] of user#%d", current.ID(), user.Identifier())
 	}
 
 	nextNode, ok := f.states[id]
 	if !ok {
-		return next, fmt.Errorf("Cannot load next state[%s] of user#%d", id, user.ID)
+		return next, fmt.Errorf("Cannot load next state[%s] of user#%d", id, user.Identifier())
 	}
 	next = nextNode.state.clone(user)
 
@@ -222,7 +222,7 @@ func (f *fsm) transit(msg *telegram.Message, current State, id string) (next Sta
 		}
 	}
 
-	err = f.storage.Save(user.ID, next.ID(), next.Data())
+	err = f.storage.Save(user.Identifier(), next.ID(), next.Data())
 	if next.next() != nil {
 		next, err = f.transit(msg, next, *next.next())
 	}

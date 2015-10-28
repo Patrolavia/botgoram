@@ -68,7 +68,7 @@ func Example() {
 	fsm := NewBySender(
 		api,
 		// store state data (a string) using default memory storage
-		MemoryStore(func(uid int) interface{} {
+		MemoryStore(func(uid string) interface{} {
 			return "No previous message"
 		}),
 		10, // at most process 10 users' message at the same time
@@ -81,12 +81,12 @@ func Example() {
 
 	// main loop, uncomment to do the real stuff
 	/*
-	for err := fsm.Start(30); err != nil; err = fsm.Resume() {
-		log.Printf("There is something goes wrong: %s", err)
-	}
+		for err := fsm.Start(30); err != nil; err = fsm.Resume() {
+			log.Printf("There is something goes wrong: %s", err)
+		}
 	*/
 
-	/* output: digraph "StateMap" {
+/* output: digraph "StateMap" {
   "dispatch" -> "hello" [label="fallback"];
   "hello" -> "initial state" [style="dotted", label="Work done, back to initial state"];
   "initial state" [fillcolor="#ccccff", style="filled"];
