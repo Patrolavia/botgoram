@@ -24,13 +24,13 @@ func TestManagerWithTwoUser(t *testing.T) {
 		ID:     1,
 		Text:   "test",
 		Sender: u1,
-		Chat:   u1.ToChat(),
+		Chat:   telegram.MockChat(u1),
 	}
 	m2 := &telegram.Message{
 		ID:     2,
 		Text:   "test",
 		Sender: u2,
-		Chat:   u2.ToChat(),
+		Chat:   telegram.MockChat(u2),
 	}
 	go m.feed([]*telegram.Message{m1, m2})
 
@@ -52,13 +52,13 @@ func TestManagerWithOneUser(t *testing.T) {
 		ID:     1,
 		Text:   "test",
 		Sender: u1,
-		Chat:   u1.ToChat(),
+		Chat:   telegram.MockChat(u1),
 	}
 	m2 := &telegram.Message{
 		ID:     2,
 		Text:   "test",
 		Sender: u1,
-		Chat:   u1.ToChat(),
+		Chat:   telegram.MockChat(u1),
 	}
 	go m.feed([]*telegram.Message{m1, m2})
 

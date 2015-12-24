@@ -11,7 +11,7 @@ func TestTypeTransitors(t *testing.T) {
 	m := func() *telegram.Message {
 		return &telegram.Message{
 			Sender: &telegram.User{},
-			Chat:   (&telegram.User{}).ToChat(),
+			Chat:   telegram.MockChat(&telegram.User{}),
 		}
 	}
 	factory := func(result string) Transitor {
