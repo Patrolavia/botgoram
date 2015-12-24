@@ -201,28 +201,28 @@ const (
 
 // Message represents a message.
 type Message struct {
-	ID               int          `json:"message_id"` // Unique message identifier
-	Sender           *User        `json:"from"`       // Sender
-	Timestamp        int64        `json:"date"`       // Date the message was sent in Unix time.
-	Chat             *Chat        `json:"chat"`       // Conversation the message belongs to — user in case of a private message, GroupChat in case of a group
-	*Forward                      // Optional
-	ReplyTo          *Message     `json:"reply_to_message,omitempty"`      // Optional. For replies, the original message.
-	Text             string       `json:"text,omitempty"`                  // Optional. For text messages, the actual UTF-8 text of the message
-	Audio            *Audio       `json:"audio,omitempty"`                 // Optional. Message is an audio file, information about the file
-	Document         *Document    `json:"document,omitempty"`              // Optional. Message is a general file, information about the file
-	Photo            []*PhotoSize `json:"photo,omitempty"`                 // Optional. Message is a photo, available sizes of the photo
-	Sticker          *Sticker     `json:"sticker,omitempty"`               // Optional. Message is a sticker, information about the sticker
-	Video            *Video       `json:"video,omitempty"`                 // Optional. Message is a video, information about the video
-	Voice            *Voice       `json:"voice,omitempty"`                 // Optional. Message is a voice message, information about the file
-	Caption          string       `json:"caption,omitempty"`               // Optional. Caption for the photo or video
-	Contact          *Contact     `json:"contact,omitempty"`               // Optional. Message is a shared contact, information about the contact
-	Location         *Location    `json:"location,omitempty"`              // Optional. Message is a shared location, information about the location
-	MemberEnter      *User        `json:"new_chat_participant,omitempty"`  // Optional. A new member was added to the group, information about them (this member may be bot itself)
-	MemberLeave      *User        `json:"left_chat_participant,omitempty"` // Optional. A member was removed from the group, information about them (this member may be bot itself)
-	NewTitle         string       `json:"new_chat_title,omitempty"`        // Optional. A group title was changed to this value
-	NewPhoto         []*PhotoSize `json:"new_chat_photo,omitempty"`        // Optional. A group photo was change to this value
-	ChatPhotoDeleted bool         `json:"delete_chat_photo,omitempty"`     // Optional. Informs that the group photo was deleted
-	GroupCreated     bool         `json:"group_created,omitempty"`         // Optional. Informs that the group has been created
+	ID                int          `json:"message_id"` // Unique message identifier
+	Sender            *User        `json:"from"`       // Sender
+	Timestamp         int64        `json:"date"`       // Date the message was sent in Unix time.
+	Chat              *Chat        `json:"chat"`       // Conversation the message belongs to — user in case of a private message, GroupChat in case of a group
+	*Forward                       // Optional
+	ReplyTo           *Message     `json:"reply_to_message,omitempty"`      // Optional. For replies, the original message.
+	Text              string       `json:"text,omitempty"`                  // Optional. For text messages, the actual UTF-8 text of the message
+	Audio             *Audio       `json:"audio,omitempty"`                 // Optional. Message is an audio file, information about the file
+	Document          *Document    `json:"document,omitempty"`              // Optional. Message is a general file, information about the file
+	Photo             []*PhotoSize `json:"photo,omitempty"`                 // Optional. Message is a photo, available sizes of the photo
+	Sticker           *Sticker     `json:"sticker,omitempty"`               // Optional. Message is a sticker, information about the sticker
+	Video             *Video       `json:"video,omitempty"`                 // Optional. Message is a video, information about the video
+	Voice             *Voice       `json:"voice,omitempty"`                 // Optional. Message is a voice message, information about the file
+	Caption           string       `json:"caption,omitempty"`               // Optional. Caption for the photo or video
+	Contact           *Contact     `json:"contact,omitempty"`               // Optional. Message is a shared contact, information about the contact
+	Location          *Location    `json:"location,omitempty"`              // Optional. Message is a shared location, information about the location
+	MemberEnter       *User        `json:"new_chat_participant,omitempty"`  // Optional. A new member was added to the group, information about them (this member may be bot itself)
+	MemberLeave       *User        `json:"left_chat_participant,omitempty"` // Optional. A member was removed from the group, information about them (this member may be bot itself)
+	NewTitle          string       `json:"new_chat_title,omitempty"`        // Optional. A group title was changed to this value
+	NewPhoto          []*PhotoSize `json:"new_chat_photo,omitempty"`        // Optional. A group photo was change to this value
+	ChatPhotoDeleted  bool         `json:"delete_chat_photo,omitempty"`     // Optional. Informs that the group photo was deleted
+	GroupCreated      bool         `json:"group_created,omitempty"`         // Optional. Informs that the group has been created
 	SuperGroupCreated bool         `json:"supergroup_chat_created"`         // Optional. Service message: the supergroup has been created
 	ChannelCreated    bool         `json:"channel_chat_created"`            // Optional. Service message: the channel has been created
 	MigrateTo         int64        `json:"migrate_to_chat_id"`              // Optional. The group has been migrated to a supergroup with the specified identifier, not exceeding 1e13 by absolute value
