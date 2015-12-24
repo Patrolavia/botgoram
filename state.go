@@ -54,8 +54,8 @@ type State interface {
 	Data() interface{}
 	SetData(interface{})
 	User() telegram.Recipient // who this state associate with
-	ID() string           // retrive current state id
-	Transit(id string)    // directly transit to another state without transitor
+	ID() string               // retrive current state id
+	Transit(id string)        // directly transit to another state without transitor
 	// Transit again base on this state.
 	// Retransit() have lower priority than Transit(id), if you call
 	// Transit(id) anywhere before or after Retransit(), the state will
