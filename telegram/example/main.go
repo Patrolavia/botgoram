@@ -80,7 +80,7 @@ or you can send message to me, I will reply it with some debug message.`, nil)
 
 func reply(msg *telegram.Message, bot telegram.API) {
 	senderType := "User"
-	if msg.Chat.IsGroup() {
+	if msg.Chat.Type != telegram.TYPECHAT {
 		senderType = "Chatroom"
 	}
 	msgType := msg.Type().String() + " "
