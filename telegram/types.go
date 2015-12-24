@@ -56,7 +56,7 @@ type Chat struct {
 
 func (c Chat) Identifier() string {
 	if c.Type == `channel` {
-		return c.User.Username
+		return "@" + c.User.Username
 	}
 	return c.User.Identifier()
 }
