@@ -16,7 +16,7 @@ type Recipient interface {
 
 // User struct represents a Telegram user or chat group.
 type User struct {
-	ID        int    `json:"id"`                   // Unique identifier for this user or bot
+	ID        int64  `json:"id"`                   // Unique identifier for this user or bot
 	FirstName string `json:"first_name,omitempty"` // User‘s or bot’s first name
 	LastName  string `json:"last_name,omitempty"`  // Optional. User‘s or bot’s last name
 	Username  string `json:"username,omitempty"`   // Optional. User‘s or bot’s username
@@ -24,7 +24,7 @@ type User struct {
 }
 
 func (u User) Identifier() string {
-	return strconv.Itoa(u.ID)
+	return strconv.FormatInt(u.ID, 10)
 }
 
 func (u User) ToUser() *User {
@@ -62,7 +62,7 @@ func (u User) Name() string {
 // type Chat represents a chat
 type Chat struct {
 	*User
-	Type string `json:"type"` // Type of chat, can be either “private”, or “group”, or “channel”
+	Type string `json:"type"` // Type of chat, can be either “private”, “group”, "supergroup" or “channel”
 }
 
 func (c Chat) Identifier() string {
@@ -223,6 +223,10 @@ type Message struct {
 	NewPhoto         []*PhotoSize `json:"new_chat_photo,omitempty"`        // Optional. A group photo was change to this value
 	ChatPhotoDeleted bool         `json:"delete_chat_photo,omitempty"`     // Optional. Informs that the group photo was deleted
 	GroupCreated     bool         `json:"group_created,omitempty"`         // Optional. Informs that the group has been created
+	SuperGroupCreated bool         `json:"supergroup_chat_created"`         // Optional. Service message: the supergroup has been created
+	ChannelCreated    bool         `json:"channel_chat_created"`            // Optional. Service message: the channel has been created
+	MigrateTo         int64        `json:"migrate_to_chat_id"`              // Optional. The group has been migrated to a supergroup with the specified identifier, not exceeding 1e13 by absolute value
+	MigrateFrom       int64        `json:"migrate_from_chat_id"`            // Optional. The group has been migrated to a supergroup with the specified identifier, not exceeding 1e13 by absolute value
 }
 
 // Type returns message type.

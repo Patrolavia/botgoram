@@ -9,7 +9,7 @@ import (
 
 func makeTestUser(name string) *telegram.User {
 	return &telegram.User{
-		ID:        rand.Int(),
+		ID:        int64(rand.Int()),
 		FirstName: name,
 	}
 }

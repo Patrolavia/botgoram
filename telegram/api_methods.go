@@ -194,7 +194,7 @@ func (a *api) SendChatAction(victim Recipient, action ChatAction) (err error) {
 
 func (a *api) GetProfilePhotos(victim *User, offset, limit int) (p *UserProfilePhotos, err error) {
 	params := url.Values{}
-	params.Set("chat_id", itoa(victim.ID))
+	params.Set("chat_id", victim.Identifier())
 	params.Set("offset", itoa(offset))
 	params.Set("limit", itoa(limit))
 	data, err := a.sendCommand("getUserProfilePhotos", params)
@@ -208,7 +208,7 @@ func (a *api) GetProfilePhotos(victim *User, offset, limit int) (p *UserProfileP
 
 func (a *api) GetAllProfilePhotos(victim *User) (p *UserProfilePhotos, err error) {
 	params := url.Values{}
-	params.Set("chat_id", itoa(victim.ID))
+	params.Set("chat_id", victim.Identifier())
 	data, err := a.sendCommand("getUserProfilePhotos", params)
 	if err != nil {
 		return
