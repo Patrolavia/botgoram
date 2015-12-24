@@ -20,12 +20,27 @@ func (f *FakeAPI) Me() (*User, error) {
 	return f.BotUser, nil
 }
 
+// MockChat converts an User to Chat
+func MockChat(recp Recipient) (ret *Chat) {
+	switch o := recp.(type) {
+	case *Chat:
+		ret = o
+	case *User:
+		ret = &Chat{
+			User:  o,
+			Title: o.FirstName,
+			Type:  TYPECHAT,
+		}
+	}
+	return
+}
+
 // SendMessage returns a new text message as if you sent the request to server
 func (f *FakeAPI) SendMessage(victim Recipient, text string, opt *Options) (*Message, error) {
 	return &Message{
 		ID:     rand.Int(),
 		Sender: f.BotUser,
-		Chat:   victim.ToChat(),
+		Chat:   MockChat(victim),
 		Text:   text,
 	}, nil
 }
@@ -35,7 +50,7 @@ func (f *FakeAPI) ForwardMessage(victim, from Recipient, messageID int) (*Messag
 	return &Message{
 		ID:     messageID,
 		Sender: f.BotUser,
-		Chat:   victim.ToChat(),
+		Chat:   MockChat(victim),
 		Forward: &Forward{
 			From:      f.BotUser,
 			Timestamp: time.Now().Unix(),
@@ -48,7 +63,7 @@ func (f *FakeAPI) SendPhoto(victim Recipient, file *File, caption string, opt *O
 	return &Message{
 		ID:     rand.Int(),
 		Sender: f.BotUser,
-		Chat:   victim.ToChat(),
+		Chat:   MockChat(victim),
 		Photo: []*PhotoSize{
 			&PhotoSize{File: file},
 		},
@@ -61,7 +76,7 @@ func (f *FakeAPI) SendAudio(victim Recipient, file *File, duration int, performe
 	return &Message{
 		ID:     rand.Int(),
 		Sender: f.BotUser,
-		Chat:   victim.ToChat(),
+		Chat:   MockChat(victim),
 		Audio: &Audio{
 			File:      file,
 			Duration:  duration,
@@ -76,7 +91,7 @@ func (f *FakeAPI) SendDocument(victim Recipient, file *File, opt *Options) (*Mes
 	return &Message{
 		ID:     rand.Int(),
 		Sender: f.BotUser,
-		Chat:   victim.ToChat(),
+		Chat:   MockChat(victim),
 		Document: &Document{
 			File: file,
 		},
@@ -88,7 +103,7 @@ func (f *FakeAPI) SendSticker(victim Recipient, file *File, opt *Options) (*Mess
 	return &Message{
 		ID:     rand.Int(),
 		Sender: f.BotUser,
-		Chat:   victim.ToChat(),
+		Chat:   MockChat(victim),
 		Sticker: &Sticker{
 			File: file,
 		},
@@ -100,7 +115,7 @@ func (f *FakeAPI) SendVideo(victim Recipient, file *File, duration int, caption 
 	return &Message{
 		ID:     rand.Int(),
 		Sender: f.BotUser,
-		Chat:   victim.ToChat(),
+		Chat:   MockChat(victim),
 		Video: &Video{
 			File:     file,
 			Duration: duration,
@@ -114,7 +129,7 @@ func (f *FakeAPI) SendVoice(victim Recipient, file *File, duration int, opt *Opt
 	return &Message{
 		ID:     rand.Int(),
 		Sender: f.BotUser,
-		Chat:   victim.ToChat(),
+		Chat:   MockChat(victim),
 		Video: &Video{
 			File:     file,
 			Duration: duration,
@@ -127,7 +142,7 @@ func (f *FakeAPI) SendLocation(victim Recipient, location *Location, opt *Option
 	return &Message{
 		ID:       rand.Int(),
 		Sender:   f.BotUser,
-		Chat:     victim.ToChat(),
+		Chat:     MockChat(victim),
 		Location: location,
 	}, nil
 }
