@@ -10,8 +10,8 @@ import (
 // Recipient is abstract parent for User and Chat
 type Recipient interface {
 	Identifier() string
-	ToUser() *User
-	ToChat() *Chat
+	// Name returns user's name and username (if has one) if regular user, title if chat group.
+	Name() string
 }
 
 // User struct represents a Telegram user or chat group.
@@ -20,35 +20,14 @@ type User struct {
 	FirstName string `json:"first_name,omitempty"` // User‘s or bot’s first name
 	LastName  string `json:"last_name,omitempty"`  // Optional. User‘s or bot’s last name
 	Username  string `json:"username,omitempty"`   // Optional. User‘s or bot’s username
-	Title     string `json:"title,omitempty"`      // Group name
 }
 
 func (u User) Identifier() string {
 	return strconv.FormatInt(u.ID, 10)
 }
 
-func (u User) ToUser() *User {
-	return &u
-}
-
-func (u User) ToChat() *Chat {
-	t := `private`
-	if u.IsGroup() {
-		t = `group`
-	}
-	return &Chat{&u, t}
-}
-
-// IsGroup returns true if this User object denotes a Telegram chat group.
-func (u User) IsGroup() bool {
-	return u.Title != ""
-}
-
 // Name returns user's name and username (if has one) if regular user, title if chat group.
 func (u User) Name() string {
-	if u.IsGroup() {
-		return u.Title
-	}
 	ret := u.FirstName
 	if u.LastName != "" {
 		ret += " " + u.LastName
@@ -59,10 +38,20 @@ func (u User) Name() string {
 	return ret
 }
 
+type ChatType string
+
+const (
+	TYPECHAT       ChatType = "private"
+	TYPEGROUP      ChatType = "group"
+	TYPESUPERGROUP ChatType = "supergroup"
+	TYPECHANNEL    ChatType = "channel"
+)
+
 // type Chat represents a chat
 type Chat struct {
 	*User
-	Type string `json:"type"` // Type of chat, can be either “private”, “group”, "supergroup" or “channel”
+	Title string   `json:"title,omitempty"` // Group name
+	Type  ChatType `json:"type"`            // Type of chat, can be either “private”, “group”, "supergroup" or “channel”
 }
 
 func (c Chat) Identifier() string {
@@ -72,12 +61,8 @@ func (c Chat) Identifier() string {
 	return c.User.Identifier()
 }
 
-func (c Chat) ToUser() *User {
-	return c.User
-}
-
-func (c Chat) ToChat() *Chat {
-	return &c
+func (c Chat) Name() string {
+	return c.Title
 }
 
 // File represents a regular file for sending.
