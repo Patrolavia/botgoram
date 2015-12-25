@@ -4,9 +4,61 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/url"
 )
+
+// MessageResult is structure of returned data from api methods if it returns message
+type MessageResult struct {
+	Ok      bool     `json:"ok"`
+	Message *Message `json:"result"`
+}
+
+// Parse returned json into message
+func (r *MessageResult) Parse(data []byte) (ret *Message, err error) {
+	if err = json.Unmarshal(data, r); err == nil {
+		ret = r.Message
+		if !r.Ok {
+			err = fmt.Errorf("API returns fail: %s", string(data))
+		}
+	}
+	return
+}
+
+// UserResult is structure of returned data from api methods if it returns user
+type UserResult struct {
+	Ok   bool  `json:"ok"`
+	User *User `json:"result"`
+}
+
+// Parse returned json into user
+func (r *UserResult) Parse(data []byte) (ret *User, err error) {
+	if err = json.Unmarshal(data, r); err == nil {
+		ret = r.User
+		if !r.Ok {
+			err = fmt.Errorf("API returns fail: %s", string(data))
+		}
+	}
+	return
+}
+
+// UserProfilePhotosResult is structure of returned data from api methods if it returns user profile photos
+type UserProfilePhotosResult struct {
+	Ok                bool               `json:"ok"`
+	UserProfilePhotos *UserProfilePhotos `json:"result"`
+}
+
+// Parse returned json into user profile photos
+func (r *UserProfilePhotosResult) Parse(data []byte) (ret *UserProfilePhotos, err error) {
+	if err = json.Unmarshal(data, r); err == nil {
+		ret = r.UserProfilePhotos
+		if !r.Ok {
+			err = fmt.Errorf("API returns fail: %s", string(data))
+		}
+	}
+	return
+}
 
 func optconv(opt *Options, u Recipient) (params url.Values, err error) {
 	params = url.Values{}
@@ -24,9 +76,8 @@ func (a *api) Me() (u *User, err error) {
 		return
 	}
 
-	u = &User{}
-	err = json.Unmarshal(data, u)
-	return
+	result := &UserResult{}
+	return result.Parse(data)
 }
 
 func (a *api) SendMessage(victim Recipient, text string, opt *Options) (m *Message, err error) {
@@ -40,9 +91,8 @@ func (a *api) SendMessage(victim Recipient, text string, opt *Options) (m *Messa
 		return
 	}
 
-	m = &Message{}
-	err = json.Unmarshal(data, m)
-	return
+	result := &MessageResult{}
+	return result.Parse(data)
 }
 
 func (a *api) ForwardMessage(victim, from Recipient, messageID int) (m *Message, err error) {
@@ -55,9 +105,8 @@ func (a *api) ForwardMessage(victim, from Recipient, messageID int) (m *Message,
 		return
 	}
 
-	m = &Message{}
-	err = json.Unmarshal(data, m)
-	return
+	result := &MessageResult{}
+	return result.Parse(data)
 }
 
 func (a *api) SendPhoto(victim Recipient, file *File, caption string, opt *Options) (m *Message, err error) {
@@ -70,9 +119,9 @@ func (a *api) SendPhoto(victim Recipient, file *File, caption string, opt *Optio
 	if err != nil {
 		return
 	}
-	m = &Message{}
-	err = json.Unmarshal(data, m)
-	return
+
+	result := &MessageResult{}
+	return result.Parse(data)
 }
 
 func (a *api) SendAudio(victim Recipient, file *File, duration int,
@@ -95,9 +144,9 @@ func (a *api) SendAudio(victim Recipient, file *File, duration int,
 	if err != nil {
 		return
 	}
-	m = &Message{}
-	err = json.Unmarshal(data, m)
-	return
+
+	result := &MessageResult{}
+	return result.Parse(data)
 }
 
 func (a *api) SendDocument(victim Recipient, file *File, opt *Options) (m *Message, err error) {
@@ -109,9 +158,9 @@ func (a *api) SendDocument(victim Recipient, file *File, opt *Options) (m *Messa
 	if err != nil {
 		return
 	}
-	m = &Message{}
-	err = json.Unmarshal(data, m)
-	return
+
+	result := &MessageResult{}
+	return result.Parse(data)
 }
 
 func (a *api) SendSticker(victim Recipient, file *File, opt *Options) (m *Message, err error) {
@@ -123,9 +172,9 @@ func (a *api) SendSticker(victim Recipient, file *File, opt *Options) (m *Messag
 	if err != nil {
 		return
 	}
-	m = &Message{}
-	err = json.Unmarshal(data, m)
-	return
+
+	result := &MessageResult{}
+	return result.Parse(data)
 }
 
 func (a *api) SendVideo(victim Recipient, file *File,
@@ -146,9 +195,9 @@ func (a *api) SendVideo(victim Recipient, file *File,
 	if err != nil {
 		return
 	}
-	m = &Message{}
-	err = json.Unmarshal(data, m)
-	return
+
+	result := &MessageResult{}
+	return result.Parse(data)
 }
 
 func (a *api) SendVoice(victim Recipient, file *File, duration int, opt *Options) (m *Message, err error) {
@@ -164,9 +213,9 @@ func (a *api) SendVoice(victim Recipient, file *File, duration int, opt *Options
 	if err != nil {
 		return
 	}
-	m = &Message{}
-	err = json.Unmarshal(data, m)
-	return
+
+	result := &MessageResult{}
+	return result.Parse(data)
 }
 
 func (a *api) SendLocation(victim Recipient, location *Location, opt *Options) (m *Message, err error) {
@@ -180,9 +229,9 @@ func (a *api) SendLocation(victim Recipient, location *Location, opt *Options) (
 	if err != nil {
 		return
 	}
-	m = &Message{}
-	err = json.Unmarshal(data, m)
-	return
+
+	result := &MessageResult{}
+	return result.Parse(data)
 }
 
 func (a *api) SendChatAction(victim Recipient, action ChatAction) (err error) {
@@ -201,9 +250,9 @@ func (a *api) GetProfilePhotos(victim *User, offset, limit int) (p *UserProfileP
 	if err != nil {
 		return
 	}
-	p = &UserProfilePhotos{}
-	err = json.Unmarshal(data, p)
-	return
+
+	result := &UserProfilePhotosResult{}
+	return result.Parse(data)
 }
 
 func (a *api) GetAllProfilePhotos(victim *User) (p *UserProfilePhotos, err error) {
@@ -213,9 +262,9 @@ func (a *api) GetAllProfilePhotos(victim *User) (p *UserProfilePhotos, err error
 	if err != nil {
 		return
 	}
-	p = &UserProfilePhotos{}
-	err = json.Unmarshal(data, p)
-	return
+
+	result := &UserProfilePhotosResult{}
+	return result.Parse(data)
 }
 
 func (a *api) DownloadFile(file *File) (r io.Reader, err error) {
