@@ -110,6 +110,7 @@ func (a api) sendFile(method, name string, file *File, params url.Values) (ret [
 	if err != nil {
 		return
 	}
+	defer resp.Body.Close()
 
 	ret, err = ioutil.ReadAll(resp.Body)
 	return
