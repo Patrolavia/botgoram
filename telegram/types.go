@@ -242,8 +242,10 @@ func (m Message) Type() (ret MessageType) {
 
 // Update represents an incoming update.
 type Update struct {
-	ID      int      `json:"update_id"` // The update‘s unique identifier.
-	Message *Message `json:"message"`   // Optional. New incoming message of any kind — text, photo, sticker, etc.
+	ID                 int                 `json:"update_id"`                      // The update‘s unique identifier.
+	Message            *Message            `json:"message,omitempty"`              // Optional. New incoming message of any kind — text, photo, sticker, etc.
+	InlineQuery        *InlineQuery        `json:"inline_query,omitempty"`         // Optional. New incoming inline query
+	ChosenInlineResult *ChosenInlineResult `json:"chosen_inline_result,omitempty"` // Optional. The result of a inline query that was chosen by a user and sent to their chat partner
 }
 
 type updates struct {
