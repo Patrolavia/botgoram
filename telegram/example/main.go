@@ -32,13 +32,48 @@ func init() {
 
 func main() {
 	bot := newBot(token)
-	ch := make(chan *telegram.Message)
-	if err := bot.Run(ch, 30); err != nil {
+	msgs := make(chan *telegram.Message)
+	queries := make(chan *telegram.InlineQuery)
+	chosen := make(chan *telegram.ChosenInlineResult)
+	if err := bot.Run(msgs, queries, chosen, 30); err != nil {
 		log.Fatalf("Error running bot: %s", err)
 	}
 	log.Print("Bot started.")
 
-	for msg := range ch {
+	go doqueries(queries, bot)
+	go dochosen(chosen, bot)
+	domsg(msgs, bot)
+}
+
+func doqueries(queries chan *telegram.InlineQuery, bot telegram.API) {
+	for q := range queries {
+		log.Printf("Get inline query: %#v", *q)
+		r := make([]telegram.InlineQueryResult, 2)
+		a := telegram.NewArticleResult("1", "article", "Query: "+q.Query)
+		a.URL("https://patrolavia.com")
+		a.Thumb("https://martingallagher.com/images/gopher.svg", 0, 0)
+		r[0] = a
+		b := telegram.NewPhotoResult(
+			"2",
+			"https://patrolavia.com/logo128.png",
+			"https://patrolavia.com/logo64.png",
+		)
+		b.Title("photo for " + q.Query)
+		r[1] = b
+		if err := bot.AnswerInlineQuery(q, r, 1, false, ""); err != nil {
+			log.Fatalf("Error when sending inline query result: %s", err)
+		}
+	}
+}
+
+func dochosen(chosen chan *telegram.ChosenInlineResult, bot telegram.API) {
+	for c := range chosen {
+		log.Printf("Got chosen: %#v", *c)
+	}
+}
+
+func domsg(msgs chan *telegram.Message, bot telegram.API) {
+	for msg := range msgs {
 		log.Printf("Got message: %#v", *msg)
 		switch msg.Text {
 		case "/help":

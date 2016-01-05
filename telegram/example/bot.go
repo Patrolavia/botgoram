@@ -10,8 +10,8 @@ import (
 // Bot is a bot fetching update throuth long polling method.
 type Bot interface {
 	telegram.API
-	Run(channel chan *telegram.Message, timeout int) error // timeout is long polling timeout in seconds
-	Err() error                                            // check if any error occured when fetching updates. Error will be cleared after retriving.
+	Run(msgs chan *telegram.Message, queries chan *telegram.InlineQuery, chosen chan *telegram.ChosenInlineResult, timeout int) error // timeout is long polling timeout in seconds
+	Err() error                                                                                                                       // check if any error occured when fetching updates. Error will be cleared after retriving.
 }
 
 type bot struct {
@@ -24,7 +24,7 @@ func newBot(token string) Bot {
 	return &bot{telegram.New(token), &sync.Mutex{}, nil}
 }
 
-func (b *bot) Run(channel chan *telegram.Message, timeout int) error {
+func (b *bot) Run(msgs chan *telegram.Message, queries chan *telegram.InlineQuery, chosen chan *telegram.ChosenInlineResult, timeout int) error {
 	u, err := b.Me()
 	if u == nil || err != nil {
 		return errors.New("Unable get bot information, is token valid?")
@@ -42,7 +42,16 @@ func (b *bot) Run(channel chan *telegram.Message, timeout int) error {
 				if update.ID >= offset {
 					offset = update.ID + 1
 				}
-				channel <- update.Message
+				if update.Message != nil && msgs != nil {
+					msgs <- update.Message
+				}
+				if update.InlineQuery != nil && queries != nil {
+					queries <- update.InlineQuery
+				}
+				if update.ChosenInlineResult != nil && chosen != nil {
+					chosen <- update.ChosenInlineResult
+				}
+
 			}
 		}
 	}()
