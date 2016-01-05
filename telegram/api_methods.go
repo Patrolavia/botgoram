@@ -327,3 +327,43 @@ func (a *api) SetWebhook(hookURL string, cert []byte) (err error) {
 	}
 	return
 }
+
+// AnswerIQResult is structure of returned data from api method "answerInlineQuery"
+type AnswerIQResult struct {
+	Ok          bool   `json:"ok"`
+	Result      bool   `json:"result,omitempty"`
+	ErrorCode   int    `json:"error_code,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+func (a *api) AnswerInlineQuery(query *InlineQuery, results []InlineQueryResult, cacheTime int, personal bool, next string) (err error) {
+	r, err := json.Marshal(results)
+	if err != nil {
+		return
+	}
+
+	if cacheTime < 0 {
+		cacheTime = 300
+	}
+
+	params := url.Values{}
+	params.Set("inline_query_id", query.ID)
+	params.Set("results", string(r))
+	params.Set("cache_time", itoa(cacheTime))
+	if personal {
+		params.Set("is_personal", "true")
+	}
+	if next != "" {
+		params.Set("next_offset", next)
+	}
+
+	data, err := a.sendCommand("answerInlineQuery", params)
+	if err != nil {
+		return
+	}
+	var res AnswerIQResult
+	if err = json.Unmarshal(data, &res); err == nil && !res.Result {
+		err = fmt.Errorf("Error answering inline query: %s (%d)", res.Description, res.ErrorCode)
+	}
+	return
+}

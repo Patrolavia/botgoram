@@ -30,6 +30,16 @@ type API interface {
 	DownloadFile(file *File) (io.Reader, error)
 	GetUpdates(offset, limit, timeout int) ([]Update, error)
 	SetWebhook(hookURL string, cert []byte) error
+
+	// AnswerInlineQuery sends answers to an inline query. On success, True is returned.
+	// No more than 50 results per query are allowed.
+	//
+	//   * cacheTime is maximum amount of time in seconds that the result of the inline query may be cached on the server. defaults to 300.
+	//   * personal controls whether results may be cached on the server side only for the user that sent the query.
+	//     By default, results may be returned to any user who sends the same query
+	//   * next is the offset that a client should send in the next query with the same text to receive more results.
+	//     Pass an empty string if there are no more results or if you don‘t support pagination. Offset length can’t exceed 64 bytes.
+	AnswerInlineQuery(query *InlineQuery, results []InlineQueryResult, cacheTime int, personal bool, next string) (err error)
 }
 
 type api struct {

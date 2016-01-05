@@ -179,7 +179,7 @@ func (f *FakeAPI) GetUpdates(offset, limit, timeout int) (u []Update, err error)
 	for ; limit > 0; limit-- {
 		select {
 		case msg := <-f.MessagePipe:
-			u = append(u, Update{offset, msg})
+			u = append(u, Update{ID: offset, Message: msg})
 			offset++
 		default:
 			if timeout > 0 {
@@ -196,5 +196,9 @@ func (f *FakeAPI) GetUpdates(offset, limit, timeout int) (u []Update, err error)
 
 // SetWebhook does exactly nothing but returns a nil
 func (f *FakeAPI) SetWebhook(hookURL string, cert []byte) error {
+	return nil
+}
+
+func (f *FakeAPI) AnswerInlineQuery(query *InlineQuery, results []InlineQueryResult, cacheTime int, personal bool, next string) (err error) {
 	return nil
 }
