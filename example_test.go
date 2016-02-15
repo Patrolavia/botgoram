@@ -85,13 +85,4 @@ func Example() {
 			log.Printf("There is something goes wrong: %s", err)
 		}
 	*/
-
-/* output: digraph "StateMap" {
-  "dispatch" -> "hello" [label="fallback"];
-  "hello" -> "initial state" [style="dotted", label="Work done, back to initial state"];
-  "initial state" [fillcolor="#ccccff", style="filled"];
-  "hello" [label="hello\n------------\nenter action"];
-  "dispatch" [bgcolor="red"];
-}
-*/
 }
