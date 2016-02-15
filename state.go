@@ -18,7 +18,7 @@ func init() {
 	commandSpliter = cs
 }
 
-// ErrNoMatching denotes the message does not match the transitor
+// ErrNoMatch denotes the message does not match the transitor
 var ErrNoMatch = errors.New("No matching transitor!")
 
 // InitialState is predefined state id for initial state

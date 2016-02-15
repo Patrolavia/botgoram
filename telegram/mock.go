@@ -199,6 +199,7 @@ func (f *FakeAPI) SetWebhook(hookURL string, cert []byte) error {
 	return nil
 }
 
+// AnswerInlineQuery does exactly nothing but returns a nil
 func (f *FakeAPI) AnswerInlineQuery(query *InlineQuery, results []InlineQueryResult, cacheTime int, personal bool, next string) (err error) {
 	return nil
 }

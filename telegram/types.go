@@ -22,6 +22,7 @@ type User struct {
 	Username  string `json:"username,omitempty"`   // Optional. User‘s or bot’s username
 }
 
+// Identifier returns string representation of user id.
 func (u User) Identifier() string {
 	return strconv.FormatInt(u.ID, 10)
 }
@@ -38,8 +39,10 @@ func (u User) Name() string {
 	return ret
 }
 
+// ChatType represents what kind or source the message from.
 type ChatType string
 
+// Here are possible chat types.
 const (
 	TYPECHAT       ChatType = "private"
 	TYPEGROUP      ChatType = "group"
@@ -47,13 +50,14 @@ const (
 	TYPECHANNEL    ChatType = "channel"
 )
 
-// type Chat represents a chat
+// Chat represents a chat
 type Chat struct {
 	*User
 	Title string   `json:"title,omitempty"` // Group name
 	Type  ChatType `json:"type"`            // Type of chat, can be either “private”, “group”, "supergroup" or “channel”
 }
 
+// Identifier returns channel name or chat room id.
 func (c Chat) Identifier() string {
 	if c.Type == `channel` {
 		return "@" + c.User.Username
@@ -61,6 +65,7 @@ func (c Chat) Identifier() string {
 	return c.User.Identifier()
 }
 
+// Name returns title of chat room.
 func (c Chat) Name() string {
 	return c.Title
 }
