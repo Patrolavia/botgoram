@@ -3,6 +3,7 @@
 Botgoram is state-based telegram bot framework written in go. It is inspired by [tucnak/telebot](https://github.com/tucnak/telebot). Botgoram helps when writing large, complicated, interative bots. If you only need a small, simple, command-based bot, [tucnak/telebot](https://github.com/tucnak/telebot) or [telegram api implementation in botgoram](https://godoc.org/github.com/Patrolavia/botgoram/telegram) would be your best friend.
 
 [![GoDoc](https://godoc.org/github.com/Patrolavia/botgoram?status.svg)](https://godoc.org/github.com/Patrolavia/botgoram)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Patrolavia/botgoram)](https://goreportcard.com/report/github.com/Patrolavia/botgoram)
 
 ### State based
 
