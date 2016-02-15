@@ -67,7 +67,7 @@ type State interface {
 
 	// Command is a special text message type, will be matched before text type.
 	// A text message matches /^(\S+)(\s*.*)?$/ will go here before text type, and
-	// we use first matching group to find out whcih transitor to call, case-sensitive.
+	// we use first matching group to find out which transitor to call, case-sensitive.
 	// (We use \S in regexp so you can define command in any language)
 	RegisterCommand(cmd string, t Transitor)
 

@@ -10,8 +10,13 @@ import (
 // Bot is a bot fetching update throuth long polling method.
 type Bot interface {
 	telegram.API
-	Run(msgs chan *telegram.Message, queries chan *telegram.InlineQuery, chosen chan *telegram.ChosenInlineResult, timeout int) error // timeout is long polling timeout in seconds
-	Err() error                                                                                                                       // check if any error occured when fetching updates. Error will be cleared after retriving.
+	Run(
+		msgs chan *telegram.Message,
+		queries chan *telegram.InlineQuery,
+		chosen chan *telegram.ChosenInlineResult,
+		timeout int,
+	) error // timeout is long polling timeout in seconds
+	Err() error // check if any error occurred when fetching updates. Error will be cleared after retriving.
 }
 
 type bot struct {

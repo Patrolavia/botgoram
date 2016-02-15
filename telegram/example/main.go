@@ -3,7 +3,7 @@
 // How to use
 //
 // You have to set an environment variable named "TELEGRAM_TOKEN", fill your bot token with it, then build and run.
-// Send "/help" to see what commmand you can use.
+// Send "/help" to see what command you can use.
 // Send text, file or something else to test reply function.
 //
 // Test video is downloaded from https://www.youtube.com/watch?v=SyOvMDYD4PE which licensed under CC BY license.
