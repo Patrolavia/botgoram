@@ -1,3 +1,6 @@
+// This file is part of Botgoram
+// Botgoram is free software: see LICENSE.txt for more details.
+
 package botgoram
 
 import (

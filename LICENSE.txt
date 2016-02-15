@@ -1,0 +1,28 @@
+Copyright 2015, 2016 Ronmi Ren <ronmi@patrolavia.com>
+
+Botgoram is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Botgoram is distributed under terms of MIT, GPL and LGPL. You
+can freely choose any of them, and you MUST EXPLICITLY CLAIM
+IT. GPLv3 is used if you did not explicitly claim a correct
+MIT, GPL or LGPL license.
+
+
+The media files in telegram/example is NOT part of Botgoram.
+
+telegram/example/test.mp4:
+    Building on the Past by Justin Cone
+    Licensed under Creative Commons License
+    Downloaded from http://mirrors.creativecommons.org/
+
+telegram/example/test.ogg:
+    Jingle Bells by Kevin MacLeod (incompetech.com)
+    Licensed under Creative Commons Attribution 3.0 Unported license.
+    Downloaded from https://commons.wikimedia.org/wiki/File:Jingle_Bells.ogg
+
+telegram/example/test.png:
+    Lincoln Box by Steve Woolf
+    Licensed under Creative Commons Attribution-ShareAlike 1.0 License.
+    Downloaded from https://en.wikipedia.org/wiki/File:Lincoln_box.png

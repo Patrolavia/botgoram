@@ -1,3 +1,6 @@
+// This file is part of Botgoram
+// Botgoram is free software: see LICENSE.txt for more details.
+
 // Example bot for testing Telegram APIs
 //
 // How to use
@@ -6,11 +9,7 @@
 // Send "/help" to see what command you can use.
 // Send text, file or something else to test reply function.
 //
-// Test video is downloaded from https://www.youtube.com/watch?v=SyOvMDYD4PE which licensed under CC BY license.
-//
-// Test image is logo of patrolavia studio, copyright 2015-, patrolavia studio.
-//
-// Test audio is downloaded from http://soundbible.com/royalty-free-sounds-1.html
+// The media files are NOT part of Botgoram, see LICENSE.txt for details.
 package main
 
 import (
