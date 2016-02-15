@@ -23,4 +23,4 @@ It depends. Draw a flowchart, especially a data flowchart, and treat each unit a
 
 ## License
 
-Any version of MIT, GPL or LGPL.
+Any version of MIT, GPL or LGPL. See LICENSE.txt for details.
