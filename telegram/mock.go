@@ -9,6 +9,26 @@ import (
 	"time"
 )
 
+// FakeUser creates an user.
+func FakeUser(id int64) *User {
+	return &User{ID: id}
+}
+
+// FakeChat creates an chat.
+func FakeChat(id int64, chatType ChatType) *Chat {
+	return &Chat{User: FakeUser(id), Type: chatType}
+}
+
+// MockChat converts a Recipient to Chat
+func MockChat(r Recipient) *Chat {
+	if chat, ok := r.AsChat(); ok {
+		return chat
+	}
+
+	u, _ := r.AsUser()
+	return FakeChat(u.ID, TYPEGROUP)
+}
+
 // FakeAPI implements API interface and does exactly nothing.
 // You can pass a channel to provide custom message data, which will be used in GetUpdates method.
 // Most identifiers are random-generated, use with cares.
@@ -21,21 +41,6 @@ type FakeAPI struct {
 // Me returns the bot user you set in FakeAPI
 func (f *FakeAPI) Me() (*User, error) {
 	return f.BotUser, nil
-}
-
-// MockChat converts an User to Chat
-func MockChat(recp Recipient) (ret *Chat) {
-	switch o := recp.(type) {
-	case *Chat:
-		ret = o
-	case *User:
-		ret = &Chat{
-			User:  o,
-			Title: o.FirstName,
-			Type:  TYPECHAT,
-		}
-	}
-	return
 }
 
 // SendMessage returns a new text message as if you sent the request to server
@@ -202,7 +207,39 @@ func (f *FakeAPI) SetWebhook(hookURL string, cert []byte) error {
 	return nil
 }
 
+// EditText modifies the message you passed in, but it will NOT parse message entities
+func (f *FakeAPI) EditText(victim Recipient, msg *Message, text string, opt *Options) (*Message, error) {
+	msg.Text = text
+	return msg, nil
+}
+
+// EditInlineText does nothing but return nil
+func (f *FakeAPI) EditInlineText(victim Recipient, id, text string, opt *Options) error {
+	return nil
+}
+
+// EditCaption modifies the message you passed in
+func (f *FakeAPI) EditCaption(victim Recipient, msg *Message, caption string, markup *ReplyMarkup) (*Message, error) {
+	msg.Caption = caption
+	return msg, nil
+}
+
+// EditInlineCaption does nothing but return nil
+func (f *FakeAPI) EditInlineCaption(victim Recipient, id, caption string, markup *ReplyMarkup) error {
+	return nil
+}
+
+// EditMarkup returns the message
+func (f *FakeAPI) EditMarkup(victim Recipient, msg *Message, markup *ReplyMarkup) (*Message, error) {
+	return msg, nil
+}
+
+// EditInlineMarkup does nothing but return nil
+func (f *FakeAPI) EditInlineMarkup(victim Recipient, id string, markup *ReplyMarkup) error {
+	return nil
+}
+
 // AnswerInlineQuery does exactly nothing but returns a nil
-func (f *FakeAPI) AnswerInlineQuery(query *InlineQuery, results []InlineQueryResult, cacheTime int, personal bool, next string) (err error) {
+func (f *FakeAPI) AnswerInlineQuery(query *InlineQuery, results []InlineQueryResult, options *InlineQueryOptions) (err error) {
 	return nil
 }
