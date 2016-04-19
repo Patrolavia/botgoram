@@ -17,7 +17,7 @@ import (
 
 // API represents all Telegram Bot APIs
 type API interface {
-	// Main API methods
+	// Main API methods. See https://core.telegram.org/bots/api#available-methods
 	Me() (*User, error)
 	SendMessage(victim Recipient, text string, opt *Options) (*Message, error)
 	ForwardMessage(victim, from Recipient, messageID int) (*Message, error)
@@ -32,10 +32,12 @@ type API interface {
 	GetProfilePhotos(victim *User, offset, limit int) (*UserProfilePhotos, error)
 	GetAllProfilePhotos(victim *User) (*UserProfilePhotos, error)
 	DownloadFile(file *File) (io.Reader, error)
+
+	// Getting updates. See https://core.telegram.org/bots/api#getting-updates
 	GetUpdates(offset, limit, timeout int) ([]Update, error)
 	SetWebhook(hookURL string, cert []byte) error
 
-	// API methods to update bot message, See https://core.telegram.org/bots/2-0-intro#updating-messages
+	// API methods to update bot message. See https://core.telegram.org/bots/2-0-intro#updating-messages
 	EditText(victim Recipient, msg *Message, text string, opt *Options) (*Message, error)
 	EditInlineText(victim Recipient, id, text string, opt *Options) error
 	EditCaption(victim Recipient, msg *Message, caption string, markup *ReplyMarkup) (*Message, error)
