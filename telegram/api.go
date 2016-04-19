@@ -15,7 +15,8 @@ import (
 	"strings"
 )
 
-// API represents all Telegram Bot APIs
+// API represents all Telegram Bot APIs. This implementation DOES NOT validate the parameters.
+// You should READ THE OFFICIAL TELEGRAM BOT DOCUMENTS CAREFULLY.
 type API interface {
 	// Main API methods. See https://core.telegram.org/bots/api#available-methods
 	Me() (*User, error)
