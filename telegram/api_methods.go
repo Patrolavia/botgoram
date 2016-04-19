@@ -342,14 +342,6 @@ func (a *api) SetWebhook(hookURL string, cert []byte) (err error) {
 	return
 }
 
-// AnswerIQResult is structure of returned data from api method "answerInlineQuery"
-type AnswerIQResult struct {
-	Ok          bool   `json:"ok"`
-	Result      bool   `json:"result,omitempty"`
-	ErrorCode   int    `json:"error_code,omitempty"`
-	Description string `json:"description,omitempty"`
-}
-
 func (a *api) doEdit(params url.Values, method string) (ret *Message, err error) {
 	data, err := a.sendCommand(method, params)
 	if err != nil {
