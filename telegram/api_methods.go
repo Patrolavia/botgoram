@@ -418,6 +418,23 @@ func (a *api) EditInlineMarkup(victim Recipient, id string, markup *ReplyMarkup)
 	return a.doEdit(params, "editMessageReplyMarkup")
 }
 
+func (a *api) AnswerCallbackQuery(id string, text string, alert bool) (err error) {
+	params := url.Values{}
+
+	params.Set("callback_query_id", id)
+	optStr(params, "text", text)
+	optBool(params, "show_alert", alert)
+
+	data, err := a.sendCommand("answerCallbackQuery", params)
+	if err != nil {
+		return
+	}
+
+	var result BoolReturnValue
+	_, err = result.Parse(data)
+	return
+}
+
 func (a *api) AnswerInlineQuery(query *InlineQuery, results []InlineQueryResult, opts *InlineQueryOptions) (err error) {
 	for _, r := range results {
 		r.ForceType()

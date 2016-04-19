@@ -43,6 +43,11 @@ type API interface {
 	EditMarkup(victim Recipient, msg *Message, markup *ReplyMarkup) (*Message, error)
 	EditInlineMarkup(victim Recipient, id string, markup *ReplyMarkup) (*Message, error)
 
+	// AnswerCallbackQuery is used to send answers to callback queries sent from inline keyboards.
+	// The answer will be displayed to the user as a notification at the top of the chat screen or as an alert.
+	// On success, True is returned.
+	AnswerCallbackQuery(id string, text string, alert bool) error
+
 	// AnswerInlineQuery sends answers to an inline query. On success, True is returned.
 	// No more than 50 results per query are allowed.
 	//
