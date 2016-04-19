@@ -37,11 +37,11 @@ type API interface {
 
 	// API methods to update bot message, See https://core.telegram.org/bots/2-0-intro#updating-messages
 	EditText(victim Recipient, msg *Message, text string, opt *Options) (*Message, error)
-	EditInlineText(victim Recipient, id, text string, opt *Options) (*Message, error)
+	EditInlineText(victim Recipient, id, text string, opt *Options) error
 	EditCaption(victim Recipient, msg *Message, caption string, markup *ReplyMarkup) (*Message, error)
-	EditInlineCaption(victim Recipient, id, caption string, markup *ReplyMarkup) (*Message, error)
+	EditInlineCaption(victim Recipient, id, caption string, markup *ReplyMarkup) error
 	EditMarkup(victim Recipient, msg *Message, markup *ReplyMarkup) (*Message, error)
-	EditInlineMarkup(victim Recipient, id string, markup *ReplyMarkup) (*Message, error)
+	EditInlineMarkup(victim Recipient, id string, markup *ReplyMarkup) error
 
 	// AnswerCallbackQuery is used to send answers to callback queries sent from inline keyboards.
 	// The answer will be displayed to the user as a notification at the top of the chat screen or as an alert.

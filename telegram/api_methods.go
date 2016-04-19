@@ -360,6 +360,24 @@ func (a *api) doEdit(params url.Values, method string) (ret *Message, err error)
 	return res.Parse(data)
 }
 
+func (a *api) doInlineEdit(params url.Values, method string) (err error) {
+	data, err := a.sendCommand(method, params)
+	if err != nil {
+		return
+	}
+
+	var res BoolReturnValue
+	ok, err := res.Parse(data)
+	if err != nil {
+		return
+	}
+
+	if !ok {
+		err = fmt.Errorf("Calling to %s failed!", method)
+	}
+	return
+}
+
 func (a *api) EditText(victim Recipient, msg *Message, text string, opt *Options) (ret *Message, err error) {
 	params := optconv(opt)
 
@@ -370,14 +388,14 @@ func (a *api) EditText(victim Recipient, msg *Message, text string, opt *Options
 	return a.doEdit(params, "editMessageText")
 }
 
-func (a *api) EditInlineText(victim Recipient, id, text string, opt *Options) (*Message, error) {
+func (a *api) EditInlineText(victim Recipient, id, text string, opt *Options) error {
 	params := optconv(opt)
 
 	params.Set("chat_id", victim.Identifier())
 	params.Set("inline_message_id", id)
 	params.Set("text", text)
 
-	return a.doEdit(params, "editMessageText")
+	return a.doInlineEdit(params, "editMessageText")
 }
 
 func (a *api) EditCaption(victim Recipient, msg *Message, caption string, markup *ReplyMarkup) (*Message, error) {
@@ -390,14 +408,14 @@ func (a *api) EditCaption(victim Recipient, msg *Message, caption string, markup
 	return a.doEdit(params, "editMessageCaption")
 }
 
-func (a *api) EditInlineCaption(victim Recipient, id, caption string, markup *ReplyMarkup) (*Message, error) {
+func (a *api) EditInlineCaption(victim Recipient, id, caption string, markup *ReplyMarkup) error {
 	params := optconv(markup)
 
 	params.Set("chat_id", victim.Identifier())
 	params.Set("inline_message_id", id)
 	params.Set("caption", caption)
 
-	return a.doEdit(params, "editMessageCaption")
+	return a.doInlineEdit(params, "editMessageCaption")
 }
 
 func (a *api) EditMarkup(victim Recipient, msg *Message, markup *ReplyMarkup) (*Message, error) {
@@ -409,13 +427,13 @@ func (a *api) EditMarkup(victim Recipient, msg *Message, markup *ReplyMarkup) (*
 	return a.doEdit(params, "editMessageReplyMarkup")
 }
 
-func (a *api) EditInlineMarkup(victim Recipient, id string, markup *ReplyMarkup) (*Message, error) {
+func (a *api) EditInlineMarkup(victim Recipient, id string, markup *ReplyMarkup) error {
 	params := optconv(markup)
 
 	params.Set("chat_id", victim.Identifier())
 	params.Set("inline_message_id", id)
 
-	return a.doEdit(params, "editMessageReplyMarkup")
+	return a.doInlineEdit(params, "editMessageReplyMarkup")
 }
 
 func (a *api) AnswerCallbackQuery(id string, text string, alert bool) (err error) {
