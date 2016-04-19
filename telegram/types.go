@@ -15,6 +15,8 @@ type Recipient interface {
 	Identifier() string
 	// Name returns user's name and username (if has one) if regular user, title if chat group.
 	Name() string
+	AsUser() (*User, bool) // returns an User if this is normal user
+	AsChat() (*Chat, bool) // returns a Chat if this is chatroom
 }
 
 // User struct represents a Telegram user or chat group.
@@ -26,12 +28,12 @@ type User struct {
 }
 
 // Identifier returns string representation of user id.
-func (u User) Identifier() string {
+func (u *User) Identifier() string {
 	return strconv.FormatInt(u.ID, 10)
 }
 
 // Name returns user's name and username (if has one) if regular user, title if chat group.
-func (u User) Name() string {
+func (u *User) Name() string {
 	ret := u.FirstName
 	if u.LastName != "" {
 		ret += " " + u.LastName
@@ -40,6 +42,16 @@ func (u User) Name() string {
 		ret += "(" + u.Username + ")"
 	}
 	return ret
+}
+
+// AsUser returns User itself
+func (u *User) AsUser() (*User, bool) {
+	return u, true
+}
+
+// AsChat always fail
+func (u *User) AsChat() (*Chat, bool) {
+	return nil, false
 }
 
 // ChatType represents what kind or source the message from.
@@ -61,16 +73,26 @@ type Chat struct {
 }
 
 // Identifier returns channel name or chat room id.
-func (c Chat) Identifier() string {
-	if c.Type == `channel` {
+func (c *Chat) Identifier() string {
+	if c.Type == TYPECHANNEL || c.Type == TYPESUPERGROUP {
 		return "@" + c.User.Username
 	}
 	return c.User.Identifier()
 }
 
 // Name returns title of chat room.
-func (c Chat) Name() string {
+func (c *Chat) Name() string {
 	return c.Title
+}
+
+// AsUser always fail
+func (c *Chat) AsUser() (*User, bool) {
+	return nil, false
+}
+
+// AsChat returns itself
+func (c *Chat) AsChat() (*Chat, bool) {
+	return c, true
 }
 
 // File represents a regular file for sending.
@@ -159,6 +181,14 @@ type Location struct {
 	Longitude float64 `json:"longitude"` // Longitude as defined by sender
 }
 
+// Venue represents a venue.
+type Venue struct {
+	Location     *Location `json:"location"`                // Venue location
+	Title        string    `json:"title"`                   // Name of the venue
+	Address      string    `json:address"`                  // Address of the venue
+	FourSquareID string    `json:"foursquare_id,omitempty"` // Optional. Foursquare identifier of the venue
+}
+
 // UserProfilePhotos represent a user's profile pictures.
 type UserProfilePhotos struct {
 	Count  int            `json:"total_count"` // Total number of profile pictures the target user has
@@ -192,34 +222,64 @@ const (
 	STATUS   MessageType = "Status"
 )
 
+// EntityType represents type of message entity
+type EntityType string
+
+func (t EntityType) String() string {
+	return string(t)
+}
+
+// predefined entity types
+const (
+	MentionEntity EntityType = "mention"
+	HashTagEntity EntityType = "hashtag"
+	CommandEntity EntityType = "bot_command"
+	URLEntity     EntityType = "url"
+	EmailEntity   EntityType = "email"
+	BoldEntity    EntityType = "bold"
+	ItalicEntity  EntityType = "italic"
+	CodeEntity    EntityType = "code"
+	PREEntity     EntityType = "pre"
+	LinkEntity    EntityType = "text_link"
+)
+
+// MessageEntity represents one special entity in a text message. For example, hashtags, usernames, URLs, etc.
+type MessageEntity struct {
+	Type   EntityType `json:"type"`          // Type of the entity. One of mention (@username), hashtag, bot_command, url, email, bold (bold text), italic (italic text), code (monowidth string), pre (monowidth block), text_link (for clickable text URLs)
+	Offset int        `json:"offset"`        // Offset in UTF-16 code units to the start of the entity
+	Length int        `json:"length"`        // Length of the entity in UTF-16 code units
+	URL    string     `json:"url,omitempty"` // Optional. For “text_link” only, url that will be opened after user taps on the text
+}
+
 // Message represents a message.
 type Message struct {
-	ID                int          `json:"message_id"` // Unique message identifier
-	Sender            *User        `json:"from"`       // Sender
-	Timestamp         int64        `json:"date"`       // Date the message was sent in Unix time.
-	Chat              *Chat        `json:"chat"`       // Conversation the message belongs to — user in case of a private message, GroupChat in case of a group
-	*Forward                       // Optional
-	ReplyTo           *Message     `json:"reply_to_message,omitempty"`      // Optional. For replies, the original message.
-	Text              string       `json:"text,omitempty"`                  // Optional. For text messages, the actual UTF-8 text of the message
-	Audio             *Audio       `json:"audio,omitempty"`                 // Optional. Message is an audio file, information about the file
-	Document          *Document    `json:"document,omitempty"`              // Optional. Message is a general file, information about the file
-	Photo             []*PhotoSize `json:"photo,omitempty"`                 // Optional. Message is a photo, available sizes of the photo
-	Sticker           *Sticker     `json:"sticker,omitempty"`               // Optional. Message is a sticker, information about the sticker
-	Video             *Video       `json:"video,omitempty"`                 // Optional. Message is a video, information about the video
-	Voice             *Voice       `json:"voice,omitempty"`                 // Optional. Message is a voice message, information about the file
-	Caption           string       `json:"caption,omitempty"`               // Optional. Caption for the photo or video
-	Contact           *Contact     `json:"contact,omitempty"`               // Optional. Message is a shared contact, information about the contact
-	Location          *Location    `json:"location,omitempty"`              // Optional. Message is a shared location, information about the location
-	MemberEnter       *User        `json:"new_chat_participant,omitempty"`  // Optional. A new member was added to the group, information about them (this member may be bot itself)
-	MemberLeave       *User        `json:"left_chat_participant,omitempty"` // Optional. A member was removed from the group, information about them (this member may be bot itself)
-	NewTitle          string       `json:"new_chat_title,omitempty"`        // Optional. A group title was changed to this value
-	NewPhoto          []*PhotoSize `json:"new_chat_photo,omitempty"`        // Optional. A group photo was change to this value
-	ChatPhotoDeleted  bool         `json:"delete_chat_photo,omitempty"`     // Optional. Informs that the group photo was deleted
-	GroupCreated      bool         `json:"group_created,omitempty"`         // Optional. Informs that the group has been created
-	SuperGroupCreated bool         `json:"supergroup_chat_created"`         // Optional. Service message: the supergroup has been created
-	ChannelCreated    bool         `json:"channel_chat_created"`            // Optional. Service message: the channel has been created
-	MigrateTo         int64        `json:"migrate_to_chat_id"`              // Optional. The group has been migrated to a supergroup with the specified identifier, not exceeding 1e13 by absolute value
-	MigrateFrom       int64        `json:"migrate_from_chat_id"`            // Optional. The group has been migrated to a supergroup with the specified identifier, not exceeding 1e13 by absolute value
+	ID                int              `json:"message_id"` // Unique message identifier
+	Sender            *User            `json:"from"`       // Sender
+	Timestamp         int64            `json:"date"`       // Date the message was sent in Unix time.
+	Chat              *Chat            `json:"chat"`       // Conversation the message belongs to — user in case of a private message, GroupChat in case of a group
+	*Forward                           // Optional
+	ReplyTo           *Message         `json:"reply_to_message,omitempty"`      // Optional. For replies, the original message.
+	Text              string           `json:"text,omitempty"`                  // Optional. For text messages, the actual UTF-8 text of the message
+	Entities          []*MessageEntity `json:"entities,omitempty"`              // Optional. For text messages, special entities like usernames, URLs, bot commands, etc. that appear in the text
+	Audio             *Audio           `json:"audio,omitempty"`                 // Optional. Message is an audio file, information about the file
+	Document          *Document        `json:"document,omitempty"`              // Optional. Message is a general file, information about the file
+	Photo             []*PhotoSize     `json:"photo,omitempty"`                 // Optional. Message is a photo, available sizes of the photo
+	Sticker           *Sticker         `json:"sticker,omitempty"`               // Optional. Message is a sticker, information about the sticker
+	Video             *Video           `json:"video,omitempty"`                 // Optional. Message is a video, information about the video
+	Voice             *Voice           `json:"voice,omitempty"`                 // Optional. Message is a voice message, information about the file
+	Caption           string           `json:"caption,omitempty"`               // Optional. Caption for the photo or video
+	Contact           *Contact         `json:"contact,omitempty"`               // Optional. Message is a shared contact, information about the contact
+	Location          *Location        `json:"location,omitempty"`              // Optional. Message is a shared location, information about the location
+	MemberEnter       *User            `json:"new_chat_participant,omitempty"`  // Optional. A new member was added to the group, information about them (this member may be bot itself)
+	MemberLeave       *User            `json:"left_chat_participant,omitempty"` // Optional. A member was removed from the group, information about them (this member may be bot itself)
+	NewTitle          string           `json:"new_chat_title,omitempty"`        // Optional. A group title was changed to this value
+	NewPhoto          []*PhotoSize     `json:"new_chat_photo,omitempty"`        // Optional. A group photo was change to this value
+	ChatPhotoDeleted  bool             `json:"delete_chat_photo,omitempty"`     // Optional. Informs that the group photo was deleted
+	GroupCreated      bool             `json:"group_created,omitempty"`         // Optional. Informs that the group has been created
+	SuperGroupCreated bool             `json:"supergroup_chat_created"`         // Optional. Service message: the supergroup has been created
+	ChannelCreated    bool             `json:"channel_chat_created"`            // Optional. Service message: the channel has been created
+	MigrateTo         int64            `json:"migrate_to_chat_id"`              // Optional. The group has been migrated to a supergroup with the specified identifier, not exceeding 1e13 by absolute value
+	MigrateFrom       int64            `json:"migrate_from_chat_id"`            // Optional. The group has been migrated to a supergroup with the specified identifier, not exceeding 1e13 by absolute value
 }
 
 // Type returns message type.
@@ -248,12 +308,26 @@ func (m Message) Type() (ret MessageType) {
 	return
 }
 
+// CallbackQuery represents an incoming callback query from a callback button in an inline keyboard.
+// If the button that originated the query was attached to a message sent by the bot, the field message will be presented.
+// If the button was attached to a message sent via the bot (in inline mode), the field inline_message_id will be presented.
+type CallbackQuery struct {
+	ID   string `json:"id"`   // Unique identifier for this query
+	From *User  `json:"from"` // Sender
+	// Optional. Message with the callback button that originated the query.
+	// Note that message content and message date will not be available if the message is too old
+	Message         *Message `json:"message,omitempty"`
+	InlineMessageID string   `json:"inline_message_id,omitempty"` // Optional. Identifier of the message sent via the bot in inline mode, that originated the query
+	Data            string   `json:"data"`                        // Data associated with the callback button. Be aware that a bad client can send arbitrary data in this field
+}
+
 // Update represents an incoming update.
 type Update struct {
 	ID                 int                 `json:"update_id"`                      // The update‘s unique identifier.
 	Message            *Message            `json:"message,omitempty"`              // Optional. New incoming message of any kind — text, photo, sticker, etc.
 	InlineQuery        *InlineQuery        `json:"inline_query,omitempty"`         // Optional. New incoming inline query
 	ChosenInlineResult *ChosenInlineResult `json:"chosen_inline_result,omitempty"` // Optional. The result of a inline query that was chosen by a user and sent to their chat partner
+	CallbackQuery      *CallbackQuery      `json:"callback_query,omitempty"`       // Optional. New incoming callback query
 }
 
 type updates struct {

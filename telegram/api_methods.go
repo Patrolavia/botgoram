@@ -10,66 +10,99 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"strconv"
 )
 
-// MessageResult is structure of returned data from api methods if it returns message
-type MessageResult struct {
-	Ok      bool     `json:"ok"`
-	Message *Message `json:"result"`
+// abstract the optional parameters
+type options interface {
+	values() url.Values
 }
 
-// Parse returned json into message
-func (r *MessageResult) Parse(data []byte) (ret *Message, err error) {
-	if err = json.Unmarshal(data, r); err == nil {
-		ret = r.Message
-		if !r.Ok {
-			err = fmt.Errorf("API returns fail: %s", string(data))
-		}
+func optconv(o options) (ret url.Values) {
+	ret = url.Values{}
+	if o != nil {
+		ret = o.values()
+	}
+
+	return ret
+}
+
+// ReturnValue represents returned values from API method calls
+type ReturnValue interface {
+	OK() bool
+	Err() error
+}
+
+type abstractReturnValue struct {
+	Ok          bool   `json:"ok"`
+	Description string `json:"description,omitempty"`
+	ErrorCode   int    `json:"error_code,omitemprt"`
+}
+
+func (v *abstractReturnValue) OK() bool {
+	return v.Ok
+}
+
+func (v *abstractReturnValue) Err() (ret error) {
+	if !v.Ok {
+		ret = fmt.Errorf("%s (%d)", v.Description, v.ErrorCode)
 	}
 	return
 }
 
-// UserResult is structure of returned data from api methods if it returns user
-type UserResult struct {
-	Ok   bool  `json:"ok"`
-	User *User `json:"result"`
-}
-
-// Parse returned json into user
-func (r *UserResult) Parse(data []byte) (ret *User, err error) {
-	if err = json.Unmarshal(data, r); err == nil {
-		ret = r.User
-		if !r.Ok {
-			err = fmt.Errorf("API returns fail: %s", string(data))
-		}
+func parseReturnValue(data []byte, val ReturnValue) (err error) {
+	if err = json.Unmarshal(data, val); err == nil {
+		err = val.Err()
 	}
 	return
 }
 
-// UserProfilePhotosResult is structure of returned data from api methods if it returns user profile photos
-type UserProfilePhotosResult struct {
-	Ok                bool               `json:"ok"`
-	UserProfilePhotos *UserProfilePhotos `json:"result"`
+// BoolReturnValue represents method return values of bool
+type BoolReturnValue struct {
+	abstractReturnValue
+	Result bool `json:"result,omitempty"`
 }
 
-// Parse returned json into user profile photos
-func (r *UserProfilePhotosResult) Parse(data []byte) (ret *UserProfilePhotos, err error) {
-	if err = json.Unmarshal(data, r); err == nil {
-		ret = r.UserProfilePhotos
-		if !r.Ok {
-			err = fmt.Errorf("API returns fail: %s", string(data))
-		}
-	}
-	return
+// Parse parses raw data
+func (v *BoolReturnValue) Parse(data []byte) (ret bool, err error) {
+	err = parseReturnValue(data, v)
+	return v.Result, err
 }
 
-func optconv(opt *Options, u Recipient) (params url.Values, err error) {
-	params = url.Values{}
-	if opt != nil {
-		params, err = opt.encode()
-	}
-	params.Set("chat_id", u.Identifier())
-	return
+// MessageReturnValue is structure of returned data from api methods if it returns message
+type MessageReturnValue struct {
+	abstractReturnValue
+	Result *Message `json:"result,omitempty"`
+}
+
+// Parse parses raw data
+func (v *MessageReturnValue) Parse(data []byte) (ret *Message, err error) {
+	err = parseReturnValue(data, v)
+	return v.Result, err
+}
+
+// UserReturnValue is structure of returned data from api methods if it returns user
+type UserReturnValue struct {
+	abstractReturnValue
+	Result *User `json:"result,omitempty"`
+}
+
+// Parse parses raw data
+func (v *UserReturnValue) Parse(data []byte) (ret *User, err error) {
+	err = parseReturnValue(data, v)
+	return v.Result, err
+}
+
+// UserProfilePhotosReturnValue is structure of returned data from api methods if it returns user profile photos
+type UserProfilePhotosReturnValue struct {
+	abstractReturnValue
+	Result *UserProfilePhotos `json:"result,omitempty"`
+}
+
+// Parse parses raw data
+func (v *UserProfilePhotosReturnValue) Parse(data []byte) (ret *UserProfilePhotos, err error) {
+	err = parseReturnValue(data, v)
+	return v.Result, err
 }
 
 func (a *api) Me() (u *User, err error) {
@@ -79,22 +112,20 @@ func (a *api) Me() (u *User, err error) {
 		return
 	}
 
-	result := &UserResult{}
+	result := &UserReturnValue{}
 	return result.Parse(data)
 }
 
 func (a *api) SendMessage(victim Recipient, text string, opt *Options) (m *Message, err error) {
-	params, err := optconv(opt, victim)
-	if err != nil {
-		return
-	}
+	params := optconv(opt)
+	params.Set("chat_id", victim.Identifier())
 	params.Set("text", text)
 	data, err := a.sendCommand("sendMessage", params)
 	if err != nil {
 		return
 	}
 
-	result := &MessageResult{}
+	result := &MessageReturnValue{}
 	return result.Parse(data)
 }
 
@@ -102,138 +133,122 @@ func (a *api) ForwardMessage(victim, from Recipient, messageID int) (m *Message,
 	params := url.Values{}
 	params.Set("chat_id", victim.Identifier())
 	params.Set("from_chat_id", from.Identifier())
-	params.Set("message_id", itoa(messageID))
+	params.Set("message_id", strconv.Itoa(messageID))
 	data, err := a.sendCommand("forwardMessage", params)
 	if err != nil {
 		return
 	}
 
-	result := &MessageResult{}
+	result := &MessageReturnValue{}
 	return result.Parse(data)
 }
 
 func (a *api) SendPhoto(victim Recipient, file *File, caption string, opt *Options) (m *Message, err error) {
-	params, err := optconv(opt, victim)
-	if err != nil {
-		return
-	}
+	params := optconv(opt)
+	params.Set("chat_id", victim.Identifier())
 	params.Set("caption", caption)
 	data, err := a.sendFile("sendPhoto", "photo", file, params)
 	if err != nil {
 		return
 	}
 
-	result := &MessageResult{}
+	result := &MessageReturnValue{}
 	return result.Parse(data)
 }
 
 func (a *api) SendAudio(victim Recipient, file *File, duration int,
 	performer, title string, opt *Options) (m *Message, err error) {
 
-	params, err := optconv(opt, victim)
-	if err != nil {
-		return
-	}
-	if duration > 0 {
-		params.Set("duration", itoa(duration))
-	}
-	if performer != "" {
-		params.Set("performer", performer)
-	}
-	if title != "" {
-		params.Set("title", title)
-	}
+	params := optconv(opt)
+	params.Set("chat_id", victim.Identifier())
+	optInt(params, "duration", duration)
+	optStr(params, "performer", performer)
+	optStr(params, "title", title)
+
 	data, err := a.sendFile("sendAudio", "audio", file, params)
 	if err != nil {
 		return
 	}
 
-	result := &MessageResult{}
+	result := &MessageReturnValue{}
 	return result.Parse(data)
 }
 
 func (a *api) SendDocument(victim Recipient, file *File, opt *Options) (m *Message, err error) {
-	params, err := optconv(opt, victim)
-	if err != nil {
-		return
-	}
+	params := optconv(opt)
+
+	params.Set("chat_id", victim.Identifier())
+
 	data, err := a.sendFile("sendDocument", "document", file, params)
 	if err != nil {
 		return
 	}
 
-	result := &MessageResult{}
+	result := &MessageReturnValue{}
 	return result.Parse(data)
 }
 
 func (a *api) SendSticker(victim Recipient, file *File, opt *Options) (m *Message, err error) {
-	params, err := optconv(opt, victim)
-	if err != nil {
-		return
-	}
+	params := optconv(opt)
+
+	params.Set("chat_id", victim.Identifier())
+
 	data, err := a.sendFile("sendSticker", "sticker", file, params)
 	if err != nil {
 		return
 	}
 
-	result := &MessageResult{}
+	result := &MessageReturnValue{}
 	return result.Parse(data)
 }
 
 func (a *api) SendVideo(victim Recipient, file *File,
 	duration int, caption string, opt *Options) (m *Message, err error) {
 
-	params, err := optconv(opt, victim)
-	if err != nil {
-		return
-	}
-	if duration > 0 {
-		params.Set("duration", itoa(duration))
-	}
-	if caption != "" {
-		params.Set("caption", caption)
-	}
+	params := optconv(opt)
+
+	params.Set("chat_id", victim.Identifier())
+	optInt(params, "duration", duration)
+	optStr(params, "caption", caption)
 
 	data, err := a.sendFile("sendVideo", "video", file, params)
 	if err != nil {
 		return
 	}
 
-	result := &MessageResult{}
+	result := &MessageReturnValue{}
 	return result.Parse(data)
 }
 
 func (a *api) SendVoice(victim Recipient, file *File, duration int, opt *Options) (m *Message, err error) {
-	params, err := optconv(opt, victim)
-	if err != nil {
-		return
-	}
-	if duration > 0 {
-		params.Set("duration", itoa(duration))
-	}
+	params := optconv(opt)
+
+	params.Set("chat_id", victim.Identifier())
+
+	optInt(params, "duration", duration)
 
 	data, err := a.sendFile("sendVoice", "voice", file, params)
 	if err != nil {
 		return
 	}
 
-	result := &MessageResult{}
+	result := &MessageReturnValue{}
 	return result.Parse(data)
 }
 
 func (a *api) SendLocation(victim Recipient, location *Location, opt *Options) (m *Message, err error) {
-	params, err := optconv(opt, victim)
-	if err != nil {
-		return
-	}
-	params.Set("latitude", ftoa(location.Latitude))
-	params.Set("longitude", ftoa(location.Longitude))
+	params := optconv(opt)
+
+	params.Set("chat_id", victim.Identifier())
+	optFloat(params, "latitude", location.Latitude)   // not optional, just lazy
+	optFloat(params, "longitude", location.Longitude) // not optional, just lazy
+
 	data, err := a.sendCommand("sendLocation", params)
 	if err != nil {
 		return
 	}
 
-	result := &MessageResult{}
+	result := &MessageReturnValue{}
 	return result.Parse(data)
 }
 
@@ -247,14 +262,14 @@ func (a *api) SendChatAction(victim Recipient, action ChatAction) (err error) {
 func (a *api) GetProfilePhotos(victim *User, offset, limit int) (p *UserProfilePhotos, err error) {
 	params := url.Values{}
 	params.Set("chat_id", victim.Identifier())
-	params.Set("offset", itoa(offset))
-	params.Set("limit", itoa(limit))
+	optInt(params, "offset", offset)
+	optInt(params, "limit", limit)
 	data, err := a.sendCommand("getUserProfilePhotos", params)
 	if err != nil {
 		return
 	}
 
-	result := &UserProfilePhotosResult{}
+	result := &UserProfilePhotosReturnValue{}
 	return result.Parse(data)
 }
 
@@ -266,7 +281,7 @@ func (a *api) GetAllProfilePhotos(victim *User) (p *UserProfilePhotos, err error
 		return
 	}
 
-	result := &UserProfilePhotosResult{}
+	result := &UserProfilePhotosReturnValue{}
 	return result.Parse(data)
 }
 
@@ -299,13 +314,11 @@ func (a *api) DownloadFile(file *File) (r io.Reader, err error) {
 
 func (a *api) GetUpdates(offset, limit, timeout int) (u []Update, err error) {
 	params := url.Values{}
-	params.Set("offset", itoa(offset))
-	if limit > 0 {
-		params.Set("limit", itoa(limit))
-	}
-	if timeout > 0 {
-		params.Set("timeout", itoa(timeout))
-	}
+
+	optInt(params, "offset", offset)
+	optInt(params, "limit", limit)
+	optInt(params, "timeout", timeout)
+
 	data, err := a.sendCommand("getUpdates", params)
 	if err != nil {
 		return
@@ -319,9 +332,7 @@ func (a *api) GetUpdates(offset, limit, timeout int) (u []Update, err error) {
 
 func (a *api) SetWebhook(hookURL string, cert []byte) (err error) {
 	params := url.Values{}
-	if hookURL != "" {
-		params.Set("url", hookURL)
-	}
+	optStr(params, "url", hookURL)
 	if cert != nil {
 		f := &File{Filename: "server.cert", Stream: bytes.NewReader(cert)}
 		_, err = a.sendFile("setWebhook", "certificate", f, params)
@@ -339,34 +350,89 @@ type AnswerIQResult struct {
 	Description string `json:"description,omitempty"`
 }
 
-func (a *api) AnswerInlineQuery(query *InlineQuery, results []InlineQueryResult, cacheTime int, personal bool, next string) (err error) {
-	r, err := json.Marshal(results)
+func (a *api) doEdit(params url.Values, method string) (ret *Message, err error) {
+	data, err := a.sendCommand(method, params)
 	if err != nil {
 		return
 	}
 
-	if cacheTime < 0 {
-		cacheTime = 300
+	var res MessageReturnValue
+	return res.Parse(data)
+}
+
+func (a *api) EditText(victim Recipient, msg *Message, text string, opt *Options) (ret *Message, err error) {
+	params := optconv(opt)
+
+	params.Set("chat_id", victim.Identifier())
+	params.Set("message_id", strconv.Itoa(msg.ID))
+	params.Set("text", text)
+
+	return a.doEdit(params, "editMessageText")
+}
+
+func (a *api) EditInlineText(victim Recipient, id, text string, opt *Options) (*Message, error) {
+	params := optconv(opt)
+
+	params.Set("chat_id", victim.Identifier())
+	params.Set("inline_message_id", id)
+	params.Set("text", text)
+
+	return a.doEdit(params, "editMessageText")
+}
+
+func (a *api) EditCaption(victim Recipient, msg *Message, caption string, markup *ReplyMarkup) (*Message, error) {
+	params := optconv(markup)
+
+	params.Set("chat_id", victim.Identifier())
+	params.Set("message_id", strconv.Itoa(msg.ID))
+	params.Set("caption", caption)
+
+	return a.doEdit(params, "editMessageCaption")
+}
+
+func (a *api) EditInlineCaption(victim Recipient, id, caption string, markup *ReplyMarkup) (*Message, error) {
+	params := optconv(markup)
+
+	params.Set("chat_id", victim.Identifier())
+	params.Set("inline_message_id", id)
+	params.Set("caption", caption)
+
+	return a.doEdit(params, "editMessageCaption")
+}
+
+func (a *api) EditMarkup(victim Recipient, msg *Message, markup *ReplyMarkup) (*Message, error) {
+	params := optconv(markup)
+
+	params.Set("chat_id", victim.Identifier())
+	params.Set("message_id", strconv.Itoa(msg.ID))
+
+	return a.doEdit(params, "editMessageReplyMarkup")
+}
+
+func (a *api) EditInlineMarkup(victim Recipient, id string, markup *ReplyMarkup) (*Message, error) {
+	params := optconv(markup)
+
+	params.Set("chat_id", victim.Identifier())
+	params.Set("inline_message_id", id)
+
+	return a.doEdit(params, "editMessageReplyMarkup")
+}
+
+func (a *api) AnswerInlineQuery(query *InlineQuery, results []InlineQueryResult, opts *InlineQueryOptions) (err error) {
+	for _, r := range results {
+		r.ForceType()
 	}
 
-	params := url.Values{}
+	params := optconv(opts)
 	params.Set("inline_query_id", query.ID)
-	params.Set("results", string(r))
-	params.Set("cache_time", itoa(cacheTime))
-	if personal {
-		params.Set("is_personal", "true")
-	}
-	if next != "" {
-		params.Set("next_offset", next)
-	}
+	optJSON(params, "results", results)
 
 	data, err := a.sendCommand("answerInlineQuery", params)
 	if err != nil {
 		return
 	}
-	var res AnswerIQResult
-	if err = json.Unmarshal(data, &res); err == nil && !res.Result {
-		err = fmt.Errorf("Error answering inline query: %s (%d)", res.Description, res.ErrorCode)
-	}
+
+	var result BoolReturnValue
+	_, err = result.Parse(data)
 	return
 }

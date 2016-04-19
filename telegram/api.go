@@ -17,6 +17,7 @@ import (
 
 // API represents all Telegram Bot APIs
 type API interface {
+	// Main API methods
 	Me() (*User, error)
 	SendMessage(victim Recipient, text string, opt *Options) (*Message, error)
 	ForwardMessage(victim, from Recipient, messageID int) (*Message, error)
@@ -34,6 +35,14 @@ type API interface {
 	GetUpdates(offset, limit, timeout int) ([]Update, error)
 	SetWebhook(hookURL string, cert []byte) error
 
+	// API methods to update bot message, See https://core.telegram.org/bots/2-0-intro#updating-messages
+	EditText(victim Recipient, msg *Message, text string, opt *Options) (*Message, error)
+	EditInlineText(victim Recipient, id, text string, opt *Options) (*Message, error)
+	EditCaption(victim Recipient, msg *Message, caption string, markup *ReplyMarkup) (*Message, error)
+	EditInlineCaption(victim Recipient, id, caption string, markup *ReplyMarkup) (*Message, error)
+	EditMarkup(victim Recipient, msg *Message, markup *ReplyMarkup) (*Message, error)
+	EditInlineMarkup(victim Recipient, id string, markup *ReplyMarkup) (*Message, error)
+
 	// AnswerInlineQuery sends answers to an inline query. On success, True is returned.
 	// No more than 50 results per query are allowed.
 	//
@@ -42,7 +51,7 @@ type API interface {
 	//     By default, results may be returned to any user who sends the same query
 	//   * next is the offset that a client should send in the next query with the same text to receive more results.
 	//     Pass an empty string if there are no more results or if you don‘t support pagination. Offset length can’t exceed 64 bytes.
-	AnswerInlineQuery(query *InlineQuery, results []InlineQueryResult, cacheTime int, personal bool, next string) (err error)
+	AnswerInlineQuery(query *InlineQuery, results []InlineQueryResult, options *InlineQueryOptions) (err error)
 }
 
 type api struct {
