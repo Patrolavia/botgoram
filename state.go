@@ -8,8 +8,47 @@ import (
 	"log"
 	"regexp"
 
-	"github.com/Patrolavia/botgoram/telegram"
+	"github.com/Patrolavia/telegram"
 )
+
+// valid message types
+const (
+	TextMsg     = "TEXT"
+	FileMsg     = "FILE"
+	AudioMsg    = "AUDIO"
+	PhotoMsg    = "PHOTO"
+	StickerMsg  = "STICKER"
+	VideoMsg    = "VIDEO"
+	VoiceMsg    = "VOICE"
+	ContactMsg  = "CONTACT"
+	LocationMsg = "LOCATION"
+	VenueMsg    = "VENUE"
+)
+
+func msgType(msg *telegram.Message) string {
+	switch {
+	case msg.Venue != nil:
+		return VenueMsg
+	case msg.Location != nil:
+		return LocationMsg
+	case msg.Contact != nil:
+		return ContactMsg
+	case msg.Voice != nil:
+		return VoiceMsg
+	case msg.Video != nil:
+		return VideoMsg
+	case msg.Sticker != nil:
+		return StickerMsg
+	case msg.Photo != nil:
+		return PhotoMsg
+	case msg.Audio != nil:
+		return AudioMsg
+	case msg.Document != nil:
+		return FileMsg
+	default:
+		return TextMsg
+	}
+}
 
 var commandSpliter *regexp.Regexp
 
@@ -56,9 +95,9 @@ type Transitor func(msg *telegram.Message, state State) (next string, err error)
 type State interface {
 	Data() interface{}
 	SetData(interface{})
-	User() telegram.Recipient // who this state associate with
-	ID() string               // retrive current state id
-	Transit(id string)        // directly transit to another state without transitor
+	User() *telegram.Victim // who this state associate with
+	ID() string             // retrive current state id
+	Transit(id string)      // directly transit to another state without transitor
 	// Transit again base on this state.
 	// Retransit() have lower priority than Transit(id), if you call
 	// Transit(id) anywhere before or after Retransit(), the state will
@@ -66,7 +105,7 @@ type State interface {
 	Retransit()
 
 	// register transitors by message types
-	Register(mt telegram.MessageType, t Transitor)
+	Register(mt string, t Transitor)
 
 	// Command is a special text message type, will be matched before text type.
 	// A text message matches /^(\S+)(\s*.*)?$/ will go here before text type, and
@@ -76,7 +115,7 @@ type State interface {
 
 	RegisterFallback(Transitor)
 	test(msg *telegram.Message) (next string, err error)
-	clone(user telegram.Recipient) State
+	clone(user *telegram.Victim) State
 	next() *string
 	re() bool
 }
@@ -95,11 +134,11 @@ func (ts transitors) test(msg *telegram.Message, cur State) (next string, err er
 
 type state struct {
 	data      interface{}
-	user      telegram.Recipient
+	user      *telegram.Victim
 	id        string
 	forward   transitors
 	reply     transitors
-	types     map[telegram.MessageType]transitors
+	types     map[string]transitors
 	command   map[string]transitors
 	text      transitors
 	fallback  transitors
@@ -110,12 +149,12 @@ type state struct {
 func newState(id string) State {
 	return &state{
 		id:      id,
-		types:   make(map[telegram.MessageType]transitors),
+		types:   make(map[string]transitors),
 		command: make(map[string]transitors),
 	}
 }
 
-func (s *state) clone(user telegram.Recipient) State {
+func (s *state) clone(user *telegram.Victim) State {
 	c := *s
 	c.user = user
 	return &c
@@ -145,7 +184,7 @@ func (s *state) SetData(data interface{}) {
 	s.data = data
 }
 
-func (s *state) User() telegram.Recipient {
+func (s *state) User() *telegram.Victim {
 	return s.user
 }
 
@@ -161,7 +200,7 @@ func (s *state) RegisterReply(t Transitor) {
 	s.reply = append(s.reply, t)
 }
 
-func (s *state) Register(mt telegram.MessageType, t Transitor) {
+func (s *state) Register(mt string, t Transitor) {
 	s.types[mt] = append(s.types[mt], t)
 }
 
@@ -195,7 +234,7 @@ func (s *state) test(msg *telegram.Message) (next string, err error) {
 	}
 
 	// process forwarded message and replied message
-	if msg.Forward != nil {
+	if msg.ForwardFrom != nil {
 		if next, err = doTest(s.forward); err == nil {
 			return
 		}
@@ -206,15 +245,15 @@ func (s *state) test(msg *telegram.Message) (next string, err error) {
 		}
 	}
 
-	msgType := msg.Type()
+	mt := msgType(msg)
 	// process command message
-	if msgType == telegram.TEXT {
+	if mt == TextMsg {
 		if next, err = testCmd(); err == nil {
 			return
 		}
 	}
-	if _, ok := s.types[msgType]; ok {
-		if next, err = doTest(s.types[msgType]); err == nil {
+	if _, ok := s.types[mt]; ok {
+		if next, err = doTest(s.types[mt]); err == nil {
 			return
 		}
 	}

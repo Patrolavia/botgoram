@@ -7,11 +7,11 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/Patrolavia/botgoram/telegram"
+	"github.com/Patrolavia/telegram"
 )
 
-func makeTestUser(name string) *telegram.User {
-	return &telegram.User{
+func makeTestUser(name string) *telegram.Victim {
+	return &telegram.Victim{
 		ID:        int64(rand.Int()),
 		FirstName: name,
 	}
@@ -24,16 +24,16 @@ func TestManagerWithTwoUser(t *testing.T) {
 
 	m := newManager(bySender, 2)
 	m1 := &telegram.Message{
-		ID:     1,
-		Text:   "test",
-		Sender: u1,
-		Chat:   telegram.MockChat(u1),
+		ID:   1,
+		Text: "test",
+		From: u1,
+		Chat: u1,
 	}
 	m2 := &telegram.Message{
-		ID:     2,
-		Text:   "test",
-		Sender: u2,
-		Chat:   telegram.MockChat(u2),
+		ID:   2,
+		Text: "test",
+		From: u2,
+		Chat: u2,
 	}
 	go m.feed([]*telegram.Message{m1, m2})
 
@@ -52,16 +52,16 @@ func TestManagerWithOneUser(t *testing.T) {
 
 	m := newManager(bySender, 2)
 	m1 := &telegram.Message{
-		ID:     1,
-		Text:   "test",
-		Sender: u1,
-		Chat:   telegram.MockChat(u1),
+		ID:   1,
+		Text: "test",
+		From: u1,
+		Chat: u1,
 	}
 	m2 := &telegram.Message{
-		ID:     2,
-		Text:   "test",
-		Sender: u1,
-		Chat:   telegram.MockChat(u1),
+		ID:   2,
+		Text: "test",
+		From: u1,
+		Chat: u1,
 	}
 	go m.feed([]*telegram.Message{m1, m2})
 

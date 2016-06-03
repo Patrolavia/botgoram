@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Patrolavia/botgoram/telegram"
+	"github.com/Patrolavia/telegram"
 )
 
 // ErrStateNotFound tells you if no such state name was registered in fsm.
@@ -33,11 +33,11 @@ type FSM interface {
 	StateMap(name string) (dot string)
 }
 
-func bySender(msg *telegram.Message) telegram.Recipient {
-	return msg.Sender
+func bySender(msg *telegram.Message) *telegram.Victim {
+	return msg.From
 }
 
-func byChat(msg *telegram.Message) telegram.Recipient {
+func byChat(msg *telegram.Message) *telegram.Victim {
 	return msg.Chat
 }
 
@@ -49,7 +49,7 @@ type internalStateData struct {
 
 type fsm struct {
 	api           telegram.API
-	userExtractor func(*telegram.Message) telegram.Recipient
+	userExtractor func(*telegram.Message) *telegram.Victim
 	states        map[string]internalStateData
 	storage       SaveLoader
 	manager       *manager
@@ -57,7 +57,7 @@ type fsm struct {
 	sm            []StateMaker
 }
 
-func newFSM(api telegram.API, ue func(*telegram.Message) telegram.Recipient, sl SaveLoader, size int) (ret FSM) {
+func newFSM(api telegram.API, ue func(*telegram.Message) *telegram.Victim, sl SaveLoader, size int) (ret FSM) {
 	tmp := &fsm{
 		api, ue, map[string]internalStateData{
 			"": internalStateData{state: newState("")},
@@ -124,7 +124,7 @@ func (f *fsm) registerStateMapTransitors() error {
 			switch {
 			case t.IsFallback:
 				st.RegisterFallback(t.Transitor)
-			case t.Command != "" && t.Type == telegram.TEXT:
+			case t.Command != "" && t.Type == TextMsg:
 				st.RegisterCommand(t.Command, t.Transitor)
 			default:
 				st.Register(t.Type, t.Transitor)

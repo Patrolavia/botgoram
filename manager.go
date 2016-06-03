@@ -6,7 +6,7 @@ package botgoram
 import (
 	"sync"
 
-	"github.com/Patrolavia/botgoram/telegram"
+	"github.com/Patrolavia/telegram"
 )
 
 type manager struct {
@@ -15,10 +15,10 @@ type manager struct {
 	msgQ         []*telegram.Message
 	lock         sync.Locker
 	cond         *sync.Cond
-	getUID       func(*telegram.Message) telegram.Recipient
+	getUID       func(*telegram.Message) *telegram.Victim
 }
 
-func newManager(f func(*telegram.Message) telegram.Recipient, size int) *manager {
+func newManager(f func(*telegram.Message) *telegram.Victim, size int) *manager {
 	l := new(sync.Mutex)
 	return &manager{
 		size,
@@ -30,7 +30,7 @@ func newManager(f func(*telegram.Message) telegram.Recipient, size int) *manager
 	}
 }
 
-func (m *manager) GetUID(msg *telegram.Message) telegram.Recipient {
+func (m *manager) GetUID(msg *telegram.Message) *telegram.Victim {
 	return m.getUID(msg)
 }
 
@@ -97,10 +97,13 @@ func (m *manager) Run(api telegram.API, timeout int) {
 
 		msgs := make([]*telegram.Message, len(updates))
 		for k, v := range updates {
-			msgs[k] = v.Message
 			if offset <= v.ID {
 				offset = v.ID + 1
 			}
+			if v.Message == nil {
+				continue
+			}
+			msgs[k] = v.Message
 		}
 		m.feed(msgs)
 	}

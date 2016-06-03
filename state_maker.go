@@ -3,8 +3,6 @@
 
 package botgoram
 
-import "github.com/Patrolavia/botgoram/telegram"
-
 // TransitorMap maps a transitor to parent state.
 type TransitorMap struct {
 	Transitor Transitor
@@ -13,7 +11,7 @@ type TransitorMap struct {
 	// It denotes a call to Transit(id).
 	IsHidden   bool
 	IsFallback bool // if this is a fallback transitor. matched second.
-	Type       telegram.MessageType
+	Type       string
 	Command    string // ignored if it is empty string or Type is not TEXT.
 	Desc       string // only for state map generating.
 }

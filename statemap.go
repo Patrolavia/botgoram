@@ -3,10 +3,7 @@
 
 package botgoram
 
-import (
-	"github.com/Patrolavia/botgoram/telegram"
-	"github.com/Patrolavia/godot"
-)
+import "github.com/Patrolavia/godot"
 
 func (f *fsm) StateMap(name string) (dot string) {
 	fix := func(n string) string {
@@ -61,10 +58,10 @@ func (f *fsm) StateMap(name string) (dot string) {
 				n, m = m, n
 			case t.IsFallback:
 				label = add(label, "fallback")
-			case t.Command != "" && t.Type == telegram.TEXT:
+			case t.Command != "" && t.Type == TextMsg:
 				label = add(label, "Command: "+t.Command)
 			default:
-				label = add(label, t.Type.String())
+				label = add(label, t.Type)
 			}
 			opt["label"] = label
 

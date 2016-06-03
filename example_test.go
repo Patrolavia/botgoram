@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/Patrolavia/botgoram/telegram"
+	"github.com/Patrolavia/telegram"
 )
 
 // HelloState defines a state, in which we reply hello message to any user who send anything to bot.
@@ -17,9 +17,9 @@ type HelloState string
 // this defines what we should do when entering this state
 func (h HelloState) enter(msg *telegram.Message, current State, api telegram.API) error {
 	reply := fmt.Sprintf("Hello, %s.\nThe message type of previous message: %s",
-		msg.Sender.FirstName, current.Data().(string))
-	api.SendMessage(msg.Sender, reply, nil)
-	current.SetData(msg.Type)
+		msg.From.FirstName, current.Data().(string))
+	api.SendMessage(msg.From.Identifier(), reply, nil)
+	current.SetData(msgType(msg))
 	current.Transit(InitialState)
 	return nil
 }
@@ -60,10 +60,10 @@ func Example() {
 	if token == "" {
 		log.Fatal("Please fill your bot token into the environmental variable 'TOKEN' to use this example")
 	}
-	api := telegram.New(token)
+	api := telegram.New(token, nil)
 
 	// validate token
-	if _, err := api.Me(); err != nil {
+	if _, err := api.GetMe(); err != nil {
 		log.Fatalf("Failed to validate token: %s", err)
 	}
 
