@@ -36,7 +36,10 @@ func TestManagerWithTwoUser(t *testing.T) {
 		From: u2,
 		Chat: u2,
 	}
-	go m.feed([]*telegram.Message{m1, m2})
+	go func() {
+		m.feed(m1)
+		m.feed(m2)
+	}()
 
 	actual := m.Begin()
 	if actual != m1 {
@@ -65,7 +68,10 @@ func TestManagerWithOneUser(t *testing.T) {
 		From: u1,
 		Chat: u1,
 	}
-	go m.feed([]*telegram.Message{m1, m2})
+	go func() {
+		m.feed(m1)
+		m.feed(m2)
+	}()
 
 	actual := m.Begin()
 	if actual != m1 {
