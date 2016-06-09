@@ -21,8 +21,9 @@ func makeTestUser(name string) *telegram.Victim {
 func TestManagerWithTwoUser(t *testing.T) {
 	u1 := makeTestUser("user1")
 	u2 := makeTestUser("user2")
+	ch := make(chan *telegram.Message)
 
-	m := newManager(bySender, 2)
+	m := newManager(bySender, 2, ch)
 	m1 := &telegram.Message{
 		ID:   1,
 		Text: "test",
@@ -35,7 +36,10 @@ func TestManagerWithTwoUser(t *testing.T) {
 		From: u2,
 		Chat: u2,
 	}
-	go m.feed([]*telegram.Message{m1, m2})
+	go func() {
+		m.feed(m1)
+		m.feed(m2)
+	}()
 
 	actual := m.Begin()
 	if actual != m1 {
@@ -49,8 +53,9 @@ func TestManagerWithTwoUser(t *testing.T) {
 
 func TestManagerWithOneUser(t *testing.T) {
 	u1 := makeTestUser("user1")
+	ch := make(chan *telegram.Message)
 
-	m := newManager(bySender, 2)
+	m := newManager(bySender, 2, ch)
 	m1 := &telegram.Message{
 		ID:   1,
 		Text: "test",
@@ -63,7 +68,10 @@ func TestManagerWithOneUser(t *testing.T) {
 		From: u1,
 		Chat: u1,
 	}
-	go m.feed([]*telegram.Message{m1, m2})
+	go func() {
+		m.feed(m1)
+		m.feed(m2)
+	}()
 
 	actual := m.Begin()
 	if actual != m1 {

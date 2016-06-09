@@ -57,11 +57,24 @@ type fsm struct {
 	sm            []StateMaker
 }
 
-func newFSM(api telegram.API, ue func(*telegram.Message) *telegram.Victim, sl SaveLoader, size int) (ret FSM) {
+func newFSM(api telegram.API, ue func(*telegram.Message) *telegram.Victim, sl SaveLoader, size int, msgs chan *telegram.Message) (ret FSM) {
+	if msgs == nil {
+		msgs = make(chan *telegram.Message)
+		lp := &telegram.LongPollFetcher{
+			Message: msgs,
+			API:     api,
+		}
+
+		go func(lp *telegram.LongPollFetcher) {
+			for {
+				lp.Fetch(size, 30) // just retry if error occurs
+			}
+		}(lp)
+	}
 	tmp := &fsm{
 		api, ue, map[string]internalStateData{
 			"": internalStateData{state: newState("")},
-		}, sl, newManager(ue, size),
+		}, sl, newManager(ue, size, msgs),
 		make(chan error, size),
 		make([]StateMaker, 0),
 	}
@@ -73,13 +86,21 @@ func newFSM(api telegram.API, ue func(*telegram.Message) *telegram.Victim, sl Sa
 }
 
 // NewBySender creates a FSM associates with message sender.
-func NewBySender(api telegram.API, sl SaveLoader, size int) FSM {
-	return newFSM(api, bySender, sl, size)
+//
+// You can provide a message channel for Botgoram to read message from.
+// This helps if your program needs to do some preprocessings or manage other update types like inline query.
+// Leave it nil will use default implementation: 30 secs long-polling, ignoring other update types and errors.
+func NewBySender(api telegram.API, sl SaveLoader, size int, msgs chan *telegram.Message) FSM {
+	return newFSM(api, bySender, sl, size, msgs)
 }
 
 // NewByChat creates a FSM associates with chatroom.
-func NewByChat(api telegram.API, sl SaveLoader, size int) FSM {
-	return newFSM(api, byChat, sl, size)
+//
+// You can provide a message channel for Botgoram to read message from.
+// This helps if your program needs to do some preprocessings or manage other update types like inline query.
+// Leave it nil will use default implementation: 30 secs long-polling, ignoring other update types and errors.
+func NewByChat(api telegram.API, sl SaveLoader, size int, msgs chan *telegram.Message) FSM {
+	return newFSM(api, byChat, sl, size, msgs)
 }
 
 func (f *fsm) MakeState(sm StateMaker) (ret State, err error) {
@@ -141,7 +162,7 @@ func (f *fsm) Start(timeout int) error {
 	}
 
 	// start message manager
-	go f.manager.Run(f.api, timeout)
+	go f.manager.Run()
 
 	// start worker goroutines
 	return f.Resume()

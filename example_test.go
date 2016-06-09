@@ -75,6 +75,7 @@ func Example() {
 			return "No previous message"
 		}),
 		10, // at most process 10 users' message at the same time
+		nil,
 	)
 
 	fsm.MakeState(HelloState("hello"))
