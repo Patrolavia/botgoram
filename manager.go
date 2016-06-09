@@ -16,9 +16,10 @@ type manager struct {
 	lock         sync.Locker
 	cond         *sync.Cond
 	getUID       func(*telegram.Message) *telegram.Victim
+	msgs         chan *telegram.Message
 }
 
-func newManager(f func(*telegram.Message) *telegram.Victim, size int) *manager {
+func newManager(f func(*telegram.Message) *telegram.Victim, size int, msgs chan *telegram.Message) *manager {
 	l := new(sync.Mutex)
 	return &manager{
 		size,
@@ -27,6 +28,7 @@ func newManager(f func(*telegram.Message) *telegram.Victim, size int) *manager {
 		l,
 		sync.NewCond(l),
 		f,
+		msgs,
 	}
 }
 
@@ -82,30 +84,9 @@ func (m *manager) Begin() *telegram.Message {
 	return msg
 }
 
-func (m *manager) Run(api telegram.API, timeout int) {
-	offset := 0
-	// Set limit to double of max goroutines
-	// This can improve performance without using too much memory.
-	limit := m.size * 2
-	for {
-		updates, err := api.GetUpdates(offset, limit, timeout)
-
-		// just try again if no pending message or any error
-		if err != nil || len(updates) < 1 {
-			continue
-		}
-
-		msgs := make([]*telegram.Message, len(updates))
-		for k, v := range updates {
-			if offset <= v.ID {
-				offset = v.ID + 1
-			}
-			if v.Message == nil {
-				continue
-			}
-			msgs[k] = v.Message
-		}
-		m.feed(msgs)
+func (m *manager) Run() {
+	for msg := range m.msgs {
+		m.feed([]*telegram.Message{msg})
 	}
 }
 
